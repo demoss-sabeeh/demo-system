@@ -1,12 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ShieldCheck, Sparkles as _unused, Clock, Star } from "lucide-react";
+import { ArrowRight, ShieldCheck, Clock, Star } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { SERVICES, BUSINESS } from "@/lib/knowledge";
 import { GALLERY, HERO_IMAGE } from "@/lib/gallery";
 import { money } from "@/lib/format";
 
-void _unused;
 
 export const Route = createFileRoute("/")({
   head: () => ({
