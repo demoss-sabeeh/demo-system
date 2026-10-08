@@ -22,7 +22,7 @@ function LeadWorkspace() {
   if (q.isError || !q.data) return <ErrorState error={q.error} retry={() => q.refetch()} />;
   const { lead, activities, messages, quotes, appointments } = q.data;
   const name = fullName(lead.customer);
-  const ctx = { lead_id: lead.id, customer_id: lead.customer_id, vehicle_id: lead.vehicle_id, service_id: lead.service_id, customerName: name };
+  const ctx = { lead_id: lead.id, customer_id: lead.customer_id, vehicle_id: lead.vehicle_id, service_id: lead.service_id, customerName: name, estimated_value: lead.estimated_value };
 
   async function status(s: LeadStatus) {
     try {
@@ -34,7 +34,7 @@ function LeadWorkspace() {
     }
   }
   async function complete() {
-    const appt = appointments.find((a) => a.lead_id === lead.id && a.status !== "completed");
+    const appt = [...appointments].reverse().find((a) => a.lead_id === lead.id && a.status !== "completed" && a.status !== "cancelled");
     try {
       if (appt) await setAppointmentStatus(appt, "completed");
       else await setLeadStatus(lead, "completed");
