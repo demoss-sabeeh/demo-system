@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { PageTitle, RowsSkeleton, inputSm } from "@/components/admin/ui";
 import { useServices, useInvalidate, type Service } from "@/lib/admin-data";
 import { supabase } from "@/integrations/supabase/client";
-import { RowDeleteDeleteButton } from "@/components/admin/delete";
+import { RowDelete } from "@/components/admin/delete";
 import { deleteService } from "@/lib/actions";
 import { money } from "@/lib/format";
 
