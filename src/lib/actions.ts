@@ -34,7 +34,7 @@ export async function createQuote(input: {
       number, lead_id: input.lead_id ?? null, customer_id: input.customer_id, vehicle_id: input.vehicle_id ?? null, service_id: input.service_id ?? null,
       status: input.status ?? "draft", discount: input.discount ?? 0, notes: input.notes ?? "", expires_at: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
     }).select("id, number").single(),
-  );
+  )) as { id: string; number: string };
   if (input.items.length) await must(supabase.from("quote_items").insert(input.items.map((it, i) => ({ ...it, quote_id: quote.id, sort: i }))));
   await logActivity({ lead_id: input.lead_id, customer_id: input.customer_id, type: "quote", title: "Quote created", detail: `${quote.number} prepared` });
   if (input.lead_id) await must(supabase.from("leads").update({ status: "quoted", updated_at: new Date().toISOString() }).eq("id", input.lead_id));
