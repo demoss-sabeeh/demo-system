@@ -657,6 +657,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_customer: { Args: { _id: string }; Returns: undefined }
+      delete_lead: { Args: { _id: string }; Returns: undefined }
+      delete_service: { Args: { _id: string }; Returns: undefined }
+      delete_vehicle: { Args: { _id: string }; Returns: undefined }
       reset_demo: { Args: never; Returns: undefined }
       seed_demo: { Args: never; Returns: undefined }
     }
