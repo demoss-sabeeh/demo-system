@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   LayoutGrid, Users, Columns3, Contact, Car, FileText, CalendarClock, CalendarDays, MessagesSquare, BellRing, Workflow, Wrench, BarChart3, Settings, Menu, LogOut, RotateCcw, ExternalLink, Loader2,
@@ -56,6 +56,7 @@ function SideNav({ onNavigate, collapsed = false }: { onNavigate?: () => void; c
 }
 
 function AdminLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobile, setMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -89,7 +90,7 @@ function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className={cn("sticky top-0 hidden h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] md:flex", collapsed ? "w-16" : "w-60")}>
+      <aside className={cn("sticky top-0 hidden h-dvh shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 lg:flex", collapsed ? "w-16" : "w-60")}>
         <button onClick={() => setCollapsed((c) => !c)} className={cn("flex h-14 items-center border-b border-sidebar-border px-4 text-navy-foreground", collapsed && "justify-center px-0")} aria-label="Toggle sidebar">
           <OperantMark compact={collapsed} />
         </button>
@@ -112,9 +113,9 @@ function AdminLayout() {
       </Sheet>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b bg-surface/95 px-4 backdrop-blur md:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b bg-surface/95 px-4 backdrop-blur md:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobile(true)} aria-label="Open navigation"><Menu /></Button>
+            <Button variant="ghost" size="icon" className="h-11 w-11 lg:hidden" onClick={() => setMobile(true)} aria-label="Open navigation"><Menu /></Button>
             <span className="inline-flex items-center gap-2 rounded border border-warning/30 bg-warning-soft px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-warning">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warning" /> Demo mode
             </span>
@@ -139,8 +140,8 @@ function AdminLayout() {
             <RunDemoButton />
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1400px] flex-1 p-4 md:p-6">
-          <Outlet />
+        <main className="mx-auto w-full max-w-[1400px] flex-1 p-4 md:p-6 lg:p-8">
+          <div key={pathname} className="animate-page-in"><Outlet /></div>
         </main>
       </div>
     </div>

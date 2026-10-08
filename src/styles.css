@@ -118,7 +118,12 @@
     font-family: var(--font-sans);
     font-feature-settings: "tnum" 0;
   }
-  h1, h2, h3 { letter-spacing: -0.015em; }
+  h1, h2, h3 { letter-spacing: -0.015em; text-wrap: balance; }
+  p { text-wrap: pretty; }
+  ::selection { background: color-mix(in oklab, var(--color-primary) 22%, transparent); }
+  :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  button, a, [role="button"] { -webkit-tap-highlight-color: transparent; }
+  button:not(:disabled):active { transform: translateY(0.5px); }
 }
 
 @utility font-display {
@@ -149,6 +154,8 @@
 @utility animate-rise { animation: rise 0.7s cubic-bezier(.2,.7,.2,1) both; }
 @utility animate-reveal { animation: reveal 1.1s cubic-bezier(.7,0,.2,1) both; }
 @utility animate-drift { animation: drift 5s ease-in-out infinite; }
+@keyframes page-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@utility animate-page-in { animation: page-in 0.28s cubic-bezier(.2,.7,.2,1) both; }
 @utility animate-flow { animation: flow 0.8s linear infinite; }
 
 @media (prefers-reduced-motion: reduce) {
