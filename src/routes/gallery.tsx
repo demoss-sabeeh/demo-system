@@ -24,7 +24,7 @@ function GalleryPage() {
             <div className="overflow-hidden rounded-md">
               <img src={g.src} alt={`${g.car} after ${g.work}`} loading={i < 2 ? "eager" : "lazy"} width={1200} height={912} className={`w-full object-cover transition-transform duration-700 group-hover:scale-[1.03] ${i === 0 ? "aspect-[16/9]" : "aspect-[4/3]"}`} />
             </div>
-            <figcaption className="mt-3 flex items-baseline justify-between border-b pb-3">
+            <figcaption className="mt-3 grid min-w-0 gap-1 border-b pb-3 sm:flex sm:items-baseline sm:justify-between sm:gap-3">
               <span className="font-bold text-navy">{g.car}</span>
               <span className="text-sm text-slate">{g.work}</span>
             </figcaption>

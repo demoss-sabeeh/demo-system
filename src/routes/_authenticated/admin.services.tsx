@@ -44,8 +44,8 @@ function Services() {
         {s.isLoading ? <div className="p-4"><RowsSkeleton /></div> : (
           <ul className="divide-y">
             {s.data?.map((x) => (
-              <li key={x.id} className={`grid items-center gap-2 px-4 py-3 md:grid-cols-12 ${x.active ? "" : "opacity-55"}`}>
-                <div className="md:col-span-5"><p className="font-bold text-navy">{x.name}</p><p className="truncate text-xs text-slate">{x.short_description}</p></div>
+              <li key={x.id} className={`grid min-w-0 grid-cols-2 items-center gap-2 px-4 py-3 md:grid-cols-12 ${x.active ? "" : "opacity-55"}`}>
+                <div className="col-span-2 min-w-0 md:col-span-5"><p className="font-bold text-navy">{x.name}</p><p className="break-words text-xs text-slate md:truncate">{x.short_description}</p></div>
                 <p className="tabular text-sm font-semibold text-navy md:col-span-2">{money(x.price_from)}</p>
                 <p className="tabular text-sm text-slate md:col-span-2">{x.duration_hours} hours</p>
                 <div className="flex items-center gap-2 md:col-span-2"><Switch checked={x.active} onCheckedChange={() => toggle(x)} aria-label={`Toggle ${x.name}`} /><span className="text-xs text-slate">{x.active ? "Active" : "Inactive"}</span></div>

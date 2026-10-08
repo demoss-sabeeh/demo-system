@@ -85,7 +85,7 @@ function QuotePage() {
 
   return (
     <SiteLayout>
-      <section className="container-site grid gap-12 py-12 lg:grid-cols-12 lg:py-16">
+      <section className="container-site grid gap-8 py-8 sm:gap-12 sm:py-12 lg:grid-cols-12 lg:py-16">
         <aside className="lg:col-span-4">
           <p className="eyebrow text-primary">Request a quote</p>
           <h1 className="mt-3 font-display text-5xl leading-none text-navy">Tell us about your vehicle.</h1>
@@ -102,7 +102,7 @@ function QuotePage() {
           {done ? (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-md border bg-surface p-8 md:p-12">
               <CheckCircle2 className="h-10 w-10 text-success" />
-              <h2 className="mt-5 font-display text-5xl text-navy">Request received, {f.firstName}.</h2>
+              <h2 className="mt-5 break-words font-display text-4xl text-navy sm:text-5xl">Request received, {f.firstName}.</h2>
               <p className="mt-4 max-w-lg text-slate">We've sent a confirmation to {f.phone}. A specialist will review your {f.year} {f.make} {f.model} and follow up with a {done.service} recommendation.</p>
               <div className="mt-6 max-w-md"><Summary rows={[["Service", done.service], ["Estimated starting value", money(done.estimate)], ["Preferred", [f.date, f.time].filter(Boolean).join(" · ")]]} /></div>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -113,7 +113,7 @@ function QuotePage() {
           ) : (
             <>
               <Stepper steps={STEPS} current={step} />
-              <div className="mt-10 min-h-[380px]">
+              <div className="mt-6 min-h-[380px] sm:mt-10">
                 {step === 0 && (
                   <StepPanel k={0} title="Your details">
                     <div className="grid gap-5 sm:grid-cols-2">
@@ -180,7 +180,7 @@ function QuotePage() {
                   </StepPanel>
                 )}
               </div>
-              <div className="mt-8 flex items-center justify-between border-t pt-6">
+              <div className="mt-8 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-t pt-6 sm:flex sm:justify-between">
                 <Button variant="ghost" onClick={() => setStep((s) => s - 1)} disabled={step === 0 || busy}><ArrowLeft /> Back</Button>
                 {step < 4 ? (
                   <Button variant="cta" size="lg" onClick={next}>Continue <ArrowRight /></Button>

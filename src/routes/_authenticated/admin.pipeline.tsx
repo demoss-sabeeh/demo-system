@@ -35,7 +35,7 @@ function Pipeline() {
     <div className="space-y-5">
       <PageTitle title="Pipeline" subtitle="Drag cards between stages. Changes are saved instantly." />
       {leads.isLoading ? <RowsSkeleton /> : (
-        <div className="-mx-4 overflow-x-auto px-4 pb-4 md:-mx-6 md:px-6">
+        <div className="-mx-4 snap-x snap-mandatory overflow-x-auto overscroll-x-contain px-4 pb-4 md:-mx-6 md:px-6 md:snap-none">
           <div className="flex min-w-max gap-3">
             {LEAD_STATUSES.map((s) => {
               const items = all.filter((l) => l.status === s);
@@ -51,7 +51,7 @@ function Pipeline() {
                     const lead = all.find((l) => l.id === e.dataTransfer.getData("text/plain"));
                     if (lead) move(lead, s);
                   }}
-                  className={cn("flex w-64 shrink-0 flex-col rounded-md border bg-secondary/40 transition-colors", over === s && "border-primary bg-accent")}
+                  className={cn("flex w-64 shrink-0 snap-start scroll-mx-4 flex-col rounded-md border bg-secondary/40 transition-colors", over === s && "border-primary bg-accent")}
                 >
                   <header className="flex items-center justify-between border-b px-3 py-2.5">
                     <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-navy">{label(s)} <span className="text-slate">{items.length}</span></span>
@@ -73,7 +73,7 @@ function Pipeline() {
                           <span className="tabular font-bold text-navy">{money(l.estimated_value)}</span>
                           <span className="text-slate">{label(l.source)} · {timeAgo(l.created_at)}</span>
                         </div>
-                        <select aria-label={`Move ${fullName(l.customer)}`} className={`${selectCls} mt-2 h-7 w-full text-xs md:hidden`} value={l.status} onChange={(e) => move(l, e.target.value as LeadStatus)}>
+                        <select aria-label={`Move ${fullName(l.customer)}`} className={`${selectCls} mt-2 w-full md:hidden`} value={l.status} onChange={(e) => move(l, e.target.value as LeadStatus)}>
                           {LEAD_STATUSES.map((x) => <option key={x} value={x}>{label(x)}</option>)}
                         </select>
                       </motion.article>

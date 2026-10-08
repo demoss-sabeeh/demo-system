@@ -35,7 +35,7 @@ function useRun(onDone: () => void) {
 function Shell({ open, onOpenChange, title, desc, children, footer }: { open: boolean; onOpenChange: (o: boolean) => void; title: string; desc?: string; children: ReactNode; footer: ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-navy">{title}</DialogTitle>
           {desc && <DialogDescription>{desc}</DialogDescription>}
@@ -103,11 +103,11 @@ export function QuoteDialog({ open, onOpenChange, ctx, quote }: { open: boolean;
       <div className="space-y-2">
         <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate">Line items</p>
         {list.map((it, i) => (
-          <div key={i} className="grid grid-cols-[1fr_52px_84px_32px] gap-2">
-            <input aria-label="Description" className={inputSm} value={it.description} onChange={(e) => setItem(i, { description: e.target.value })} placeholder="Description" />
-            <input aria-label="Quantity" type="number" min={1} className={inputSm} value={it.quantity} onChange={(e) => setItem(i, { quantity: Math.max(1, Number(e.target.value)) })} />
-            <input aria-label="Unit price" type="number" min={0} className={inputSm} value={it.unit_price} onChange={(e) => setItem(i, { unit_price: Math.max(0, Number(e.target.value)) })} />
-            <Button variant="ghost" size="icon" aria-label="Remove item" onClick={() => setItems(list.filter((_, j) => j !== i))} disabled={list.length === 1}><Trash2 /></Button>
+          <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_44px] items-end gap-2 border-b pb-3 sm:grid-cols-[minmax(0,1fr)_60px_90px_36px] sm:border-0 sm:pb-0">
+            <input aria-label="Description" className={`${inputSm} col-span-3 sm:col-span-1`} value={it.description} onChange={(e) => setItem(i, { description: e.target.value })} placeholder="Description" />
+            <label className="min-w-0"><span className="mb-1 block text-xs text-slate sm:hidden">Quantity</span><input aria-label="Quantity" type="number" min={1} className={inputSm} value={it.quantity} onChange={(e) => setItem(i, { quantity: Math.max(1, Number(e.target.value)) })} /></label>
+            <label className="min-w-0"><span className="mb-1 block text-xs text-slate sm:hidden">Unit price ($)</span><input aria-label="Unit price" type="number" min={0} className={inputSm} value={it.unit_price} onChange={(e) => setItem(i, { unit_price: Math.max(0, Number(e.target.value)) })} /></label>
+            <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" aria-label="Remove item" onClick={() => setItems(list.filter((_, j) => j !== i))} disabled={list.length === 1}><Trash2 /></Button>
           </div>
         ))}
         <Button variant="ghost" size="sm" onClick={() => setItems([...list, { description: "", quantity: 1, unit_price: 0 }])}><Plus /> Add item</Button>

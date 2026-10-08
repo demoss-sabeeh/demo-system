@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep phone form fields at least 16px and constrain text-bearing grid tracks with minmax(0, 1fr); this prevents input zoom and clipped records.
+- Default the calendar to day view on phones while retaining explicit week/month selection; daily appointments remain readable without horizontal scrolling.
+- Size the floating assistant against the visual viewport; its composer must remain accessible when a phone keyboard is open.
