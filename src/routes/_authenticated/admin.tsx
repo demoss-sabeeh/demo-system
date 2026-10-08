@@ -140,7 +140,7 @@ function AdminLayout() {
           </div>
         </header>
         <main className="mx-auto w-full max-w-[1400px] flex-1 p-4 md:p-6 lg:p-8">
-          <Outlet />
+          <div key={pathname} className="animate-page-in"><Outlet /></div>
         </main>
       </div>
     </div>
