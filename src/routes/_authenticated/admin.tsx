@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   LayoutGrid, Users, Columns3, Contact, Car, FileText, CalendarClock, CalendarDays, MessagesSquare, BellRing, Workflow, Wrench, BarChart3, Settings, Menu, LogOut, RotateCcw, ExternalLink, Loader2,
@@ -56,6 +56,7 @@ function SideNav({ onNavigate, collapsed = false }: { onNavigate?: () => void; c
 }
 
 function AdminLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobile, setMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [resetting, setResetting] = useState(false);
