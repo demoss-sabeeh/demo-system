@@ -45,7 +45,7 @@ function nextDays(n: number) {
 function BookPage() {
   const search = Route.useSearch();
   const [step, setStep] = useState(0);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ location: string } | null>(null);
   const [f, setF] = useState({ service: search.service && serviceBySlug(search.service) ? search.service : "", year: "", make: "", model: "", color: "", date: "", time: "", firstName: "", lastName: "", email: "", phone: "", notes: "" });
