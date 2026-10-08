@@ -161,14 +161,43 @@ export const askAssistant = createServerFn({ method: "POST" })
     if (!key) return { ...demoReply(data.messages), mode: "demo" as const };
     try {
       const system = `You are the virtual assistant for ${BUSINESS.name} in Dallas, TX. Answer ONLY using the knowledge below. If the answer isn't in it, say you're not sure and offer to connect them with the team. Be concise (2-4 sentences), warm and professional. Quote prices as "starting around" ranges and note the final price depends on paint condition. Never invent availability; say you can help find a time. End your message with the tag [ACTION:quote] if the customer should request a quote, [ACTION:book] if they want to schedule, or nothing otherwise.\n\nKNOWLEDGE:\n${knowledgeAsText()}`;
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
         method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "google/gemini-3-flash-preview", messages: [{ role: "system", content: system }, ...data.messages] }),
+        headers: { "Lovable-API-Key": key, Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "fetch", "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "openai/gpt-6-astra",
+          instructions: system,
+          input: data.messages.map((m) => ({ role: m.role, content: m.content })),
+          reasoning: { effort: "low" },
+          store: false,
+          stream: true,
+        }),
       });
-      if (!res.ok) throw new Error(`gateway ${res.status}`);
-      const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-      let text = json.choices?.[0]?.message?.content?.trim() ?? "";
+      if (!res.ok || !res.body) throw new Error(`gateway ${res.status}`);
+      // Consume the SSE stream and collect output text deltas.
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      let text = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const payload = line.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
+          try {
+            const ev = JSON.parse(payload) as { type?: string; delta?: string };
+            if (ev.type === "response.output_text.delta" && ev.delta) text += ev.delta;
+          } catch {
+            /* ignore partial */
+          }
+        }
+      }
+      text = text.trim();
       if (!text) throw new Error("empty");
       let action: Action = null;
       const m = text.match(/\[ACTION:(quote|book)\]/i);

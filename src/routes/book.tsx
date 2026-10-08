@@ -16,7 +16,7 @@ import { createBooking, getAvailability } from "@/lib/public.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/book")({
-  validateSearch: (s: Record<string, unknown>) => ({ service: typeof s.service === "string" ? s.service : undefined }),
+  validateSearch: (s: Record<string, unknown>): { service?: string } => (typeof s.service === "string" ? { service: s.service } : {}),
   head: () => ({
     meta: [
       { title: "Book a Detailing Appointment Online — Apex Auto Detailing" },
@@ -45,7 +45,7 @@ function nextDays(n: number) {
 function BookPage() {
   const search = Route.useSearch();
   const [step, setStep] = useState(0);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ location: string } | null>(null);
   const [f, setF] = useState({ service: search.service && serviceBySlug(search.service) ? search.service : "", year: "", make: "", model: "", color: "", date: "", time: "", firstName: "", lastName: "", email: "", phone: "", notes: "" });
@@ -56,7 +56,7 @@ function BookPage() {
   const slots = useQuery({ queryKey: ["availability", f.date], queryFn: () => avail({ data: { date: f.date } }), enabled: !!f.date && step === 3 });
   const svc = serviceBySlug(f.service);
 
-  const checks: Record<number, () => Record<string, string>> = {
+  const checks: Record<number, () => Record<string, string | undefined>> = {
     0: () => (f.service ? {} : { service: "Choose a service" }),
     1: () => {
       const r = z.object({ year: z.coerce.number().int().min(1950).max(2030), make: z.string().trim().min(1), model: z.string().trim().min(1) }).safeParse(f);
