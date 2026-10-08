@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PageTitle, RowsSkeleton } from "@/components/admin/ui";
 import { AppointmentSheet } from "@/components/admin/AppointmentSheet";
 import { useAppointments, type Appointment } from "@/lib/admin-data";
-import { dayKey, fmtTime, fullName, statusTone } from "@/lib/format";
+import { dayKey, fmtTime, statusTone } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin/calendar")({ component: CalendarPage });
@@ -85,7 +85,6 @@ function CalendarPage() {
       )}
       <p className="text-xs text-slate">Times shown in Central Time (Dallas).</p>
       <AppointmentSheet appt={current} onClose={() => setSel(null)} />
-      {void fullName}
     </div>
   );
 }
