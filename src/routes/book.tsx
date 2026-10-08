@@ -56,7 +56,7 @@ function BookPage() {
   const slots = useQuery({ queryKey: ["availability", f.date], queryFn: () => avail({ data: { date: f.date } }), enabled: !!f.date && step === 3 });
   const svc = serviceBySlug(f.service);
 
-  const checks: Record<number, () => Record<string, string>> = {
+  const checks: Record<number, () => Record<string, string | undefined>> = {
     0: () => (f.service ? {} : { service: "Choose a service" }),
     1: () => {
       const r = z.object({ year: z.coerce.number().int().min(1950).max(2030), make: z.string().trim().min(1), model: z.string().trim().min(1) }).safeParse(f);
