@@ -7,6 +7,7 @@ import { AppointmentSheet } from "@/components/admin/AppointmentSheet";
 import { useAppointments, type Appointment } from "@/lib/admin-data";
 import { dayKey, fmtTime, statusTone } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createFileRoute("/_authenticated/admin/calendar")({ component: CalendarPage });
 
@@ -26,7 +27,9 @@ function Chip({ a, onClick, compact }: { a: Appointment; onClick: () => void; co
 
 function CalendarPage() {
   const a = useAppointments();
-  const [view, setView] = useState<View>("week");
+  const isMobile = useIsMobile();
+  const [selectedView, setView] = useState<View | null>(null);
+  const view = selectedView ?? (isMobile ? "day" : "week");
   const [anchor, setAnchor] = useState(() => new Date());
   const [sel, setSel] = useState<string | null>(null);
   const byDay = useMemo(() => (a.data ?? []).reduce<Record<string, Appointment[]>>((acc, x) => ((acc[dayKey(x.starts_at)] ??= []).push(x), acc), {}), [a.data]);
@@ -44,7 +47,7 @@ function CalendarPage() {
     <div className="space-y-5">
       <PageTitle title="Calendar" subtitle={title} actions={
         <>
-          <div className="flex rounded-md border bg-surface p-0.5">{(["day", "week", "month"] as View[]).map((v) => <button key={v} onClick={() => setView(v)} className={cn("rounded px-3 py-1 text-xs font-semibold capitalize", view === v ? "bg-navy text-navy-foreground" : "text-slate")}>{v}</button>)}</div>
+          <div className="flex w-full rounded-md border bg-surface p-0.5 sm:w-auto">{(["day", "week", "month"] as View[]).map((v) => <Button variant={view === v ? "navy" : "ghost"} size="sm" aria-pressed={view === v} key={v} onClick={() => setView(v)} className="h-11 flex-1 capitalize sm:h-8 sm:flex-none">{v}</Button>)}</div>
           <Button variant="outline" size="icon" aria-label="Previous" onClick={() => setAnchor(addDays(anchor, -step))}><ChevronLeft /></Button>
           <Button variant="outline" size="sm" onClick={() => setAnchor(new Date())}>Today</Button>
           <Button variant="outline" size="icon" aria-label="Next" onClick={() => setAnchor(addDays(anchor, step))}><ChevronRight /></Button>

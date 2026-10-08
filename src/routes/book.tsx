@@ -110,7 +110,7 @@ function BookPage() {
 
   return (
     <SiteLayout>
-      <section className="container-site grid gap-12 py-12 lg:grid-cols-12 lg:py-16">
+      <section className="container-site grid gap-8 py-8 sm:gap-12 sm:py-12 lg:grid-cols-12 lg:py-16">
         <aside className="lg:col-span-4">
           <p className="eyebrow text-primary">Book online</p>
           <h1 className="mt-3 font-display text-5xl leading-none text-navy">Choose your time.</h1>
@@ -120,7 +120,7 @@ function BookPage() {
           {done ? (
             <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="rounded-md border bg-surface p-8 md:p-12">
               <CalendarCheck2 className="h-10 w-10 text-success" />
-              <h2 className="mt-5 font-display text-5xl text-navy">Appointment confirmed.</h2>
+              <h2 className="mt-5 break-words font-display text-4xl text-navy sm:text-5xl">Appointment confirmed.</h2>
               <p className="mt-3 text-slate">A confirmation was sent to {f.phone}. We'll send a reminder 24 hours before.</p>
               <div className="mt-8 max-w-lg"><Summary rows={rows} /></div>
               <Button asChild variant="cta-outline" size="lg" className="mt-8"><Link to="/">Back to home</Link></Button>
@@ -128,7 +128,7 @@ function BookPage() {
           ) : (
             <>
               <Stepper steps={STEPS} current={step} />
-              <div className="mt-10 min-h-[380px]">
+              <div className="mt-6 min-h-[380px] sm:mt-10">
                 {step === 0 && (
                   <StepPanel k={0} title="Select a service">
                     <div className="grid gap-2">
@@ -191,12 +191,12 @@ function BookPage() {
                 )}
                 {step === 5 && <StepPanel k={5} title="Confirm your appointment"><Summary rows={rows} /></StepPanel>}
               </div>
-              <div className="mt-8 flex items-center justify-between border-t pt-6">
+              <div className="mt-8 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-t pt-6 sm:flex sm:justify-between">
                 <Button variant="ghost" onClick={() => setStep((s) => s - 1)} disabled={step === 0 || busy}><ArrowLeft /> Back</Button>
                 {step < 5 ? (
                   <Button variant="cta" size="lg" onClick={next}>Continue <ArrowRight /></Button>
                 ) : (
-                  <Button variant="cta" size="lg" onClick={confirm} disabled={busy}>{busy ? <><Loader2 className="animate-spin" /> Confirming</> : "Confirm appointment"}</Button>
+                  <Button variant="cta" size="lg" className="h-auto min-h-12 whitespace-normal px-3 py-3 sm:px-7" onClick={confirm} disabled={busy}>{busy ? <><Loader2 className="animate-spin" /> Confirming</> : "Confirm appointment"}</Button>
                 )}
               </div>
             </>
