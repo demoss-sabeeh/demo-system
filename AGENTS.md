@@ -12,3 +12,4 @@
 - Keep phone form fields at least 16px and constrain text-bearing grid tracks with minmax(0, 1fr); this prevents input zoom and clipped records.
 - Default the calendar to day view on phones while retaining explicit week/month selection; daily appointments remain readable without horizontal scrolling.
 - Size the floating assistant against the visual viewport; its composer must remain accessible when a phone keyboard is open.
+- Deletes go through src/lib/actions.ts (delete_* SQL functions for leads, vehicles, customers, services) and the shared ConfirmDelete/RowDelete/DeleteButton components; keeps dependent-record handling consistent and atomic.
