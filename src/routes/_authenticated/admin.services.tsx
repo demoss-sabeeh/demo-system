@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { PageTitle, RowsSkeleton, inputSm } from "@/components/admin/ui";
 import { useServices, useInvalidate, type Service } from "@/lib/admin-data";
 import { supabase } from "@/integrations/supabase/client";
+import { RowDeleteDeleteButton } from "@/components/admin/delete";
+import { deleteService } from "@/lib/actions";
 import { money } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/services")({ component: Services });
@@ -44,12 +46,13 @@ function Services() {
         {s.isLoading ? <div className="p-4"><RowsSkeleton /></div> : (
           <ul className="divide-y">
             {s.data?.map((x) => (
-              <li key={x.id} className={`grid min-w-0 grid-cols-2 items-center gap-2 px-4 py-3 md:grid-cols-12 ${x.active ? "" : "opacity-55"}`}>
+              <li key={x.id} className={`grid min-w-0 grid-cols-2 items-center gap-2 px-4 py-3 md:grid-cols-[repeat(11,minmax(0,1fr))_auto_auto] ${x.active ? "" : "opacity-55"}`}>
                 <div className="col-span-2 min-w-0 md:col-span-5"><p className="font-bold text-navy">{x.name}</p><p className="break-words text-xs text-slate md:truncate">{x.short_description}</p></div>
                 <p className="tabular text-sm font-semibold text-navy md:col-span-2">{money(x.price_from)}</p>
                 <p className="tabular text-sm text-slate md:col-span-2">{x.duration_hours} hours</p>
                 <div className="flex items-center gap-2 md:col-span-2"><Switch checked={x.active} onCheckedChange={() => toggle(x)} aria-label={`Toggle ${x.name}`} /><span className="text-xs text-slate">{x.active ? "Active" : "Inactive"}</span></div>
-                <Button variant="ghost" size="sm" className="md:col-span-1" onClick={() => setD({ id: x.id, name: x.name, short_description: x.short_description, price_from: x.price_from, duration_hours: Number(x.duration_hours) })}><Pencil /> Edit</Button>
+                <Button variant="ghost" size="sm" className="justify-self-start" onClick={() => setD({ id: x.id, name: x.name, short_description: x.short_description, price_from: x.price_from, duration_hours: Number(x.duration_hours) })}><Pencil /> Edit</Button>
+                <RowDelete className="justify-self-end" kind="Service" name={x.name} detail="Services used by leads, quotes or appointments can’t be deleted — deactivate them instead." onConfirm={() => deleteService(x.id)} />
               </li>
             ))}
           </ul>

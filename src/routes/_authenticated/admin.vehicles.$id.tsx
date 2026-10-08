@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Car } from "lucide-react";
 import { Panel, StatusBadge, RowsSkeleton, ErrorState } from "@/components/admin/ui";
+import { DeleteButton } from "@/components/admin/delete";
+import { deleteVehicle } from "@/lib/actions";
 import { useVehicle } from "@/lib/admin-data";
 import { fmtDate, fmtDateTime, fullName, money, vehicleName } from "@/lib/format";
 
@@ -14,6 +16,7 @@ const NEXT: Record<string, [string, number]> = {
 function VehicleProfile() {
   const { id } = Route.useParams();
   const q = useVehicle(id);
+  const nav = useNavigate();
   if (q.isLoading) return <RowsSkeleton rows={6} />;
   if (q.isError || !q.data) return <ErrorState error={q.error} retry={() => q.refetch()} />;
   const { vehicle, appointments, quotes } = q.data;
@@ -26,7 +29,7 @@ function VehicleProfile() {
     <div className="space-y-5">
       <Link to="/admin/vehicles" className="inline-flex items-center gap-1 text-xs font-semibold text-slate hover:text-navy"><ArrowLeft className="h-3.5 w-3.5" /> Vehicles</Link>
       <div className="rounded-md border bg-surface p-5">
-        <div className="flex items-center gap-3"><Car className="h-6 w-6 text-primary" /><h1 className="text-2xl font-extrabold text-navy">{vehicleName(vehicle)}</h1></div>
+        <div className="flex flex-wrap items-center gap-3"><Car className="h-6 w-6 text-primary" /><h1 className="min-w-0 flex-1 text-2xl font-extrabold text-navy">{vehicleName(vehicle)}</h1><DeleteButton kind="Vehicle" name={vehicleName(vehicle)} detail="Its leads, quotes and appointments stay on the customer record without a vehicle attached." onConfirm={() => deleteVehicle(vehicle.id)} onDeleted={() => nav({ to: "/admin/vehicles" })} /></div>
         <p className="mt-1 text-sm text-slate">Color · {vehicle.color || "—"} &nbsp;·&nbsp; Owner · {vehicle.customer && <Link to="/admin/customers/$id" params={{ id: vehicle.customer_id }} className="font-semibold text-primary">{fullName(vehicle.customer)}</Link>}</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">

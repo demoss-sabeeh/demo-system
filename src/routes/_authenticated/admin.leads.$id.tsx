@@ -1,12 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, BadgeCheck, CalendarPlus, CheckCheck, FilePlus2, MessageSquarePlus, BellPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Panel, StatusBadge, Timeline, RowsSkeleton, ErrorState, selectCls } from "@/components/admin/ui";
 import { BookDialog, FollowUpDialog, MessageDialog, QuoteDialog } from "@/components/admin/dialogs";
+import { DeleteButton } from "@/components/admin/delete";
 import { useInvalidate, useLead } from "@/lib/admin-data";
-import { setLeadStatus, setAppointmentStatus } from "@/lib/actions";
+import { setLeadStatus, setAppointmentStatus, deleteLead } from "@/lib/actions";
 import { fmtDate, fmtDateTime, fmtTime, fullName, label, LEAD_STATUSES, money, vehicleName, type LeadStatus } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ function LeadWorkspace() {
   const q = useLead(id);
   const invalidate = useInvalidate();
   const [dlg, setDlg] = useState<null | "book" | "quote" | "msg" | "fu">(null);
+  const nav = useNavigate();
 
   if (q.isLoading) return <RowsSkeleton rows={8} />;
   if (q.isError || !q.data) return <ErrorState error={q.error} retry={() => q.refetch()} />;
@@ -63,6 +65,7 @@ function LeadWorkspace() {
           <Button size="sm" variant="outline" onClick={() => setDlg("msg")}><MessageSquarePlus /> Send message</Button>
           <Button size="sm" variant="outline" onClick={() => setDlg("fu")}><BellPlus /> Follow-up</Button>
           <Button size="sm" variant="navy" onClick={complete} disabled={lead.status === "completed"}><CheckCheck /> Mark completed</Button>
+          <DeleteButton kind="Lead" name={`${name} — ${lead.service?.name ?? "lead"}`} detail="Quotes, appointments, messages and follow-ups stay on the customer record." onConfirm={() => deleteLead(lead.id)} onDeleted={() => nav({ to: "/admin/leads" })} />
         </div>
       </div>
 

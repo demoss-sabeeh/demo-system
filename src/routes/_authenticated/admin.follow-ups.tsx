@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageTitle, StatusBadge, RowsSkeleton, EmptyState, selectCls, inputSm } from "@/components/admin/ui";
+import { RowDelete } from "@/components/admin/delete";
+import { deleteFollowUp } from "@/lib/actions";
 import { useFollowUps, useInvalidate } from "@/lib/admin-data";
 import { supabase } from "@/integrations/supabase/client";
 import { dayKey, fmtDate, FU_STATUSES, FU_TYPES, fullName, label, vehicleName } from "@/lib/format";
@@ -42,7 +44,7 @@ function FollowUps() {
                 <div className="min-w-0 md:col-span-3"><p className="text-sm font-semibold text-navy">{FU_TYPES[x.type]}</p><p className="text-xs text-slate">{x.reason}</p></div>
                 <p className="tabular text-xs text-slate md:col-span-2">Last {fmtDate(x.last_contact_at)} · Next <span className="font-semibold text-navy">{fmtDate(x.next_contact_at)}</span></p>
                 <div className="md:col-span-2 md:text-right"><StatusBadge status={x.status} /></div>
-                <select aria-label="Update status" className={`${selectCls} md:col-span-2`} value={x.status} onChange={(e) => update(x.id, e.target.value)}>{FU_STATUSES.map((s) => <option key={s} value={s}>{label(s)}</option>)}</select>
+                <div className="flex items-center gap-1 md:col-span-2"><select aria-label="Update status" className={`${selectCls} min-w-0 flex-1`} value={x.status} onChange={(e) => update(x.id, e.target.value)}>{FU_STATUSES.map((s) => <option key={s} value={s}>{label(s)}</option>)}</select><RowDelete kind="Follow-up" name={`${FU_TYPES[x.type] ?? "Follow-up"} · ${fullName(x.customer)}`} onConfirm={() => deleteFollowUp(x.id)} /></div>
               </li>
             ))}
           </ul>
