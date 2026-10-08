@@ -13,7 +13,7 @@ import { BUSINESS } from "@/lib/knowledge";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin/quotes")({
-  validateSearch: (s: Record<string, unknown>) => ({ open: typeof s.open === "string" ? s.open : undefined }),
+  validateSearch: (s: Record<string, unknown>): { open?: string } => (typeof s.open === "string" ? { open: s.open } : {}),
   component: Quotes,
 });
 

@@ -13,7 +13,7 @@ import { money } from "@/lib/format";
 import { submitQuoteRequest } from "@/lib/public.functions";
 
 export const Route = createFileRoute("/quote")({
-  validateSearch: (s: Record<string, unknown>) => ({ service: typeof s.service === "string" ? s.service : undefined }),
+  validateSearch: (s: Record<string, unknown>): { service?: string } => (typeof s.service === "string" ? { service: s.service } : {}),
   head: () => ({
     meta: [
       { title: "Request a Detailing Quote — Apex Auto Detailing Dallas" },

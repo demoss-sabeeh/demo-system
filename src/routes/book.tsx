@@ -16,7 +16,7 @@ import { createBooking, getAvailability } from "@/lib/public.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/book")({
-  validateSearch: (s: Record<string, unknown>) => ({ service: typeof s.service === "string" ? s.service : undefined }),
+  validateSearch: (s: Record<string, unknown>): { service?: string } => (typeof s.service === "string" ? { service: s.service } : {}),
   head: () => ({
     meta: [
       { title: "Book a Detailing Appointment Online — Apex Auto Detailing" },
