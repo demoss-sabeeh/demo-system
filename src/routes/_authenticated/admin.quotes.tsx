@@ -85,14 +85,14 @@ function QuotePreview({ q }: { q: Quote }) {
         <Button size="sm" variant="outline" onClick={() => act("accepted")} disabled={q.status === "accepted"}><Check /> Accept</Button>
         <Button size="sm" variant="outline" onClick={() => act("declined")} disabled={q.status === "declined"}><X /> Decline</Button>
       </div>
-      <article className="rounded-md border bg-surface p-6">
-        <header className="flex items-start justify-between border-b pb-4">
-          <div><p className="text-sm font-extrabold tracking-[0.18em] text-navy">APEX AUTO DETAILING</p><p className="text-xs text-slate">{BUSINESS.address}</p></div>
+      <article className="rounded-md border bg-surface p-4 sm:p-6">
+        <header className="grid min-w-0 gap-3 border-b pb-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="min-w-0"><p className="text-sm font-extrabold tracking-[0.18em] text-navy">APEX AUTO DETAILING</p><p className="text-xs text-slate">{BUSINESS.address}</p></div>
           <div className="text-right"><p className="tabular font-bold text-navy">{q.number}</p><StatusBadge status={q.status} /></div>
         </header>
-        <div className="grid grid-cols-2 gap-4 py-4 text-sm">
-          <div><p className="text-[10px] font-bold uppercase tracking-wider text-slate">Prepared for</p><p className="font-semibold text-navy">{fullName(q.customer)}</p><p className="text-slate">{q.customer?.email}</p></div>
-          <div className="text-right"><p className="text-[10px] font-bold uppercase tracking-wider text-slate">Vehicle</p><p className="font-semibold text-navy">{vehicleName(q.vehicle)}</p><p className="text-slate">Expires {fmtDate(q.expires_at ? q.expires_at + "T12:00:00Z" : null)}</p></div>
+        <div className="grid min-w-0 gap-4 py-4 text-sm sm:grid-cols-2">
+          <div className="min-w-0 [overflow-wrap:anywhere]"><p className="text-[10px] font-bold uppercase tracking-wider text-slate">Prepared for</p><p className="font-semibold text-navy">{fullName(q.customer)}</p><p className="text-slate">{q.customer?.email}</p></div>
+          <div className="min-w-0 sm:text-right"><p className="text-[10px] font-bold uppercase tracking-wider text-slate">Vehicle</p><p className="font-semibold text-navy">{vehicleName(q.vehicle)}</p><p className="text-slate">Expires {fmtDate(q.expires_at ? q.expires_at + "T12:00:00Z" : null)}</p></div>
         </div>
         <table className="w-full text-sm">
           <thead className="border-y text-left text-[10px] font-bold uppercase tracking-wider text-slate"><tr><th className="py-2">Item</th><th className="py-2 text-right">Qty</th><th className="py-2 text-right">Amount</th></tr></thead>

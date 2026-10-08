@@ -5,8 +5,16 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export function Stepper({ steps, current }: { steps: string[]; current: number }) {
+  const progress = useRef<HTMLOListElement>(null);
+  const previous = useRef(current);
+  useEffect(() => {
+    if (previous.current === current) return;
+    previous.current = current;
+    progress.current?.scrollIntoView({ block: "start", behavior: "instant" });
+    progress.current?.parentElement?.querySelector<HTMLElement>("[data-step-panel]")?.focus({ preventScroll: true });
+  }, [current]);
   return (
-    <ol className="flex scroll-mt-28 gap-1" aria-label="Progress">
+    <ol ref={progress} className="flex scroll-mt-28 gap-1" aria-label="Progress">
       {steps.map((s, i) => (
         <li key={s} className="flex-1" aria-current={i === current ? "step" : undefined}>
           <div className={cn("h-0.5 w-full transition-colors", i <= current ? "bg-primary" : "bg-border")} />
@@ -20,16 +28,8 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
 }
 
 export function StepPanel({ k, title, children }: { k: string | number; title: string; children: ReactNode }) {
-  const panel = useRef<HTMLDivElement>(null);
-  const previous = useRef(k);
-  useEffect(() => {
-    if (previous.current === k) return;
-    previous.current = k;
-    panel.current?.scrollIntoView({ block: "start", behavior: "instant" });
-    panel.current?.focus({ preventScroll: true });
-  }, [k]);
   return (
-    <motion.div ref={panel} tabIndex={-1} key={k} className="scroll-mt-28 outline-none" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }}>
+    <motion.div data-step-panel tabIndex={-1} key={k} className="scroll-mt-28 outline-none" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }}>
       <h2 className="font-display text-4xl text-navy">{title}</h2>
       <div className="mt-8">{children}</div>
     </motion.div>
