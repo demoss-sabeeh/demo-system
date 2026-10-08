@@ -47,8 +47,8 @@ function Home() {
               Professional detailing, paint correction, ceramic coating, and protection services for vehicles that deserve more.
             </p>
             <div className="mt-8 flex animate-rise flex-wrap gap-3 [animation-delay:240ms]">
-              <Button asChild variant="cta" size="lg"><Link to="/quote">Get a quote <ArrowRight /></Link></Button>
-              <Button asChild variant="cta-outline" size="lg"><Link to="/book">Book an appointment</Link></Button>
+              <Button asChild variant="cta" size="lg" className="w-full sm:w-auto"><Link to="/quote">Get a quote <ArrowRight /></Link></Button>
+              <Button asChild variant="cta-outline" size="lg" className="w-full sm:w-auto"><Link to="/book">Book an appointment</Link></Button>
             </div>
           </div>
           <div className="relative lg:col-span-7">

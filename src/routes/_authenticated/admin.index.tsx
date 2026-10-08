@@ -30,7 +30,7 @@ function Overview() {
         <Kpi icon={UserPlus} label="New leads" value={L.filter((l) => l.status === "new").length} hint={`${L.filter((l) => new Date(l.created_at).getTime() > weekAgo).length} received this week`} />
         <Kpi icon={FileText} label="Open quotes" value={(quotes.data ?? []).filter((q) => ["draft", "sent", "viewed"].includes(q.status)).length} hint="Draft, sent or viewed" />
         <Kpi icon={CalendarCheck} label="Booked" value={(appts.data ?? []).filter((a) => ["confirmed", "requested"].includes(a.status) && new Date(a.starts_at).getTime() > Date.now()).length} hint="Upcoming appointments" />
-        <Kpi icon={BellRing} label="Pending follow-ups" value={pendingFu.length} hint="Pending or scheduled" />
+        <Kpi icon={BellRing} label="Follow-ups" value={pendingFu.length} hint="Pending or scheduled" />
         <Kpi icon={CalendarClock} label="Today" value={(appts.data ?? []).filter((a) => dayKey(a.starts_at) === today && a.status !== "cancelled").length} hint="Appointments today" />
       </div>
 
