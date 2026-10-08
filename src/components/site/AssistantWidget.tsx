@@ -136,7 +136,7 @@ export function AssistantWidget() {
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close assistant" : "Chat with Apex"}
         aria-expanded={open}
-        className="fixed bottom-5 right-5 z-50 flex h-12 items-center gap-2 rounded-full bg-navy px-5 text-sm font-semibold text-navy-foreground shadow-lg transition-transform hover:-translate-y-0.5 sm:right-6"
+        className="fixed bottom-5 right-5 z-50 flex h-12 items-center gap-2 rounded-md bg-navy px-5 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 text-sm font-semibold text-navy-foreground shadow-lg transition-transform hover:-translate-y-0.5 sm:right-6"
       >
         {open ? <X className="h-4 w-4" /> : <MessageSquareText className="h-4 w-4" />}
         <span className="hidden sm:inline">{open ? "Close" : "Ask Apex"}</span>

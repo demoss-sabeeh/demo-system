@@ -32,7 +32,7 @@ function Quotes() {
       <PageTitle title="Quotes" subtitle="Create, send and track every quote." />
       <div className="flex flex-wrap gap-1.5">
         {["", ...QUOTE_STATUSES].map((s) => (
-          <button key={s || "all"} onClick={() => setStatus(s)} className={cn("rounded-full border px-3 py-1 text-xs font-semibold", status === s ? "border-navy bg-navy text-navy-foreground" : "bg-surface text-slate hover:text-navy")}>
+          <button key={s || "all"} onClick={() => setStatus(s)} className={cn("min-h-9 rounded border px-3 py-1 transition-colors text-xs font-semibold", status === s ? "border-navy bg-navy text-navy-foreground" : "bg-surface text-slate hover:text-navy")}>
             {s ? label(s) : "All"} <span className="opacity-60">{(quotes.data ?? []).filter((q) => !s || q.status === s).length}</span>
           </button>
         ))}

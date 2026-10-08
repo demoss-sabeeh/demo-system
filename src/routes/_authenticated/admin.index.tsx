@@ -26,7 +26,7 @@ function Overview() {
   return (
     <div className="space-y-6">
       <PageTitle title={`${greeting()}, Mike.`} subtitle="Here's what's happening with your detailing business." />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5 [&>*:last-child]:col-span-2 md:[&>*:last-child]:col-span-1">
         <Kpi icon={UserPlus} label="New leads" value={L.filter((l) => l.status === "new").length} hint={`${L.filter((l) => new Date(l.created_at).getTime() > weekAgo).length} received this week`} />
         <Kpi icon={FileText} label="Open quotes" value={(quotes.data ?? []).filter((q) => ["draft", "sent", "viewed"].includes(q.status)).length} hint="Draft, sent or viewed" />
         <Kpi icon={CalendarCheck} label="Booked" value={(appts.data ?? []).filter((a) => ["confirmed", "requested"].includes(a.status) && new Date(a.starts_at).getTime() > Date.now()).length} hint="Upcoming appointments" />
@@ -35,7 +35,7 @@ function Overview() {
       </div>
 
       <Panel title="Lead pipeline" action={<Link to="/admin/pipeline" className="text-xs font-semibold text-primary">Open pipeline →</Link>}>
-        <div className="grid grid-cols-4 gap-px overflow-hidden rounded border bg-border sm:grid-cols-7">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded border bg-border min-[480px]:grid-cols-4 sm:grid-cols-7 [&>*:last-child]:col-span-2 min-[480px]:[&>*:last-child]:col-span-1">
           {LEAD_STATUSES.map((s) => {
             const items = L.filter((l) => l.status === s);
             return (
