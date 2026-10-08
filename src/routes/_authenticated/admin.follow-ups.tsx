@@ -31,7 +31,7 @@ function FollowUps() {
       </div>
       <div className="flex flex-wrap gap-2">
         <select aria-label="Type" className={selectCls} value={type} onChange={(e) => setType(e.target.value)}><option value="">All types</option>{Object.entries(FU_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-        <input type="date" aria-label="Next contact date" className={`${inputSm} w-auto`} value={date} onChange={(e) => setDate(e.target.value)} />
+        <input type="date" aria-label="Next contact date" className={`${inputSm} sm:w-48`} value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
       <div className="overflow-hidden rounded-md border bg-surface">
         {f.isLoading ? <div className="p-4"><RowsSkeleton /></div> : rows.length === 0 ? <EmptyState title="No follow-ups" body="You're all caught up." /> : (
@@ -39,9 +39,9 @@ function FollowUps() {
             {rows.map((x) => (
               <li key={x.id} className="grid gap-2 px-4 py-3 md:grid-cols-12 md:items-center">
                 <div className="md:col-span-3"><Link to="/admin/customers/$id" params={{ id: x.customer_id }} className="font-bold text-navy hover:text-primary">{fullName(x.customer)}</Link><p className="text-xs text-slate">{vehicleName(x.vehicle)}</p></div>
-                <div className="md:col-span-4"><p className="text-sm font-semibold text-navy">{FU_TYPES[x.type]}</p><p className="text-xs text-slate">{x.reason}</p></div>
+                <div className="min-w-0 md:col-span-3"><p className="text-sm font-semibold text-navy">{FU_TYPES[x.type]}</p><p className="text-xs text-slate">{x.reason}</p></div>
                 <p className="tabular text-xs text-slate md:col-span-2">Last {fmtDate(x.last_contact_at)} · Next <span className="font-semibold text-navy">{fmtDate(x.next_contact_at)}</span></p>
-                <div className="md:col-span-1"><StatusBadge status={x.status} /></div>
+                <div className="md:col-span-2 md:text-right"><StatusBadge status={x.status} /></div>
                 <select aria-label="Update status" className={`${selectCls} md:col-span-2`} value={x.status} onChange={(e) => update(x.id, e.target.value)}>{FU_STATUSES.map((s) => <option key={s} value={s}>{label(s)}</option>)}</select>
               </li>
             ))}

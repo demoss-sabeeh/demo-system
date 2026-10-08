@@ -9,7 +9,7 @@ import { useInvalidate, useServices, type Quote } from "@/lib/admin-data";
 import { FU_TYPES, localToIso, money } from "@/lib/format";
 import { TIME_SLOTS } from "@/lib/knowledge";
 
-type Ctx = { lead_id?: string | null; customer_id: string; vehicle_id?: string | null; service_id?: string | null; customerName?: string };
+type Ctx = { lead_id?: string | null; customer_id: string; vehicle_id?: string | null; service_id?: string | null; customerName?: string; estimated_value?: number };
 
 function useRun(onDone: () => void) {
   const invalidate = useInvalidate();
@@ -83,7 +83,7 @@ export function QuoteDialog({ open, onOpenChange, ctx, quote }: { open: boolean;
   const [discount, setDiscount] = useState(quote?.discount ?? 0);
   const [notes, setNotes] = useState(quote?.notes ?? "");
   const { busy, run } = useRun(() => onOpenChange(false));
-  const list: Item[] = items ?? (svcDefault ? [{ description: svcDefault.name, quantity: 1, unit_price: svcDefault.price_from }, { description: "Paint decontamination & prep", quantity: 1, unit_price: 150 }] : [{ description: "", quantity: 1, unit_price: 0 }]);
+  const list: Item[] = items ?? (svcDefault ? (ctx?.estimated_value ? [{ description: svcDefault.name, quantity: 1, unit_price: ctx.estimated_value }] : [{ description: svcDefault.name, quantity: 1, unit_price: svcDefault.price_from }, { description: "Paint decontamination & prep", quantity: 1, unit_price: 150 }]) : [{ description: "", quantity: 1, unit_price: 0 }]);
   const setItem = (i: number, p: Partial<Item>) => setItems(list.map((it, j) => (j === i ? { ...it, ...p } : it)));
   const subtotal = list.reduce((a, i) => a + i.quantity * i.unit_price, 0);
   const valid = list.every((i) => i.description.trim() && i.quantity > 0);

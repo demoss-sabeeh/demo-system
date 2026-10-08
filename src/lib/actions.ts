@@ -37,7 +37,9 @@ export async function createQuote(input: {
   )) as { id: string; number: string };
   if (input.items.length) await must(supabase.from("quote_items").insert(input.items.map((it, i) => ({ ...it, quote_id: quote.id, sort: i }))));
   await logActivity({ lead_id: input.lead_id, customer_id: input.customer_id, type: "quote", title: "Quote created", detail: `${quote.number} prepared` });
-  if (input.lead_id) await must(supabase.from("leads").update({ status: "quoted", updated_at: new Date().toISOString() }).eq("id", input.lead_id));
+  const total = Math.max(0, input.items.reduce((a, i) => a + i.quantity * i.unit_price, 0) - (input.discount ?? 0));
+  if (input.lead_id) await must(supabase.from("leads").update({ status: "quoted", estimated_value: total, updated_at: new Date().toISOString() }).eq("id", input.lead_id));
+  if (input.status === "sent") await quoteSentEffects({ number: quote.number, customer_id: input.customer_id, lead_id: input.lead_id ?? null, vehicle_id: input.vehicle_id ?? null });
   return quote;
 }
 
@@ -49,14 +51,17 @@ export async function updateQuote(id: string, patch: { status?: string; discount
   }
 }
 
-export async function setQuoteStatus(quote: { id: string; number: string; customer_id: string; lead_id: string | null }, status: string) {
+async function quoteSentEffects(quote: { number: string; customer_id: string; lead_id: string | null; vehicle_id?: string | null }) {
+  await logActivity({ lead_id: quote.lead_id, customer_id: quote.customer_id, type: "quote", title: "Quote sent", detail: quote.number });
+  await must(supabase.from("messages").insert({ customer_id: quote.customer_id, lead_id: quote.lead_id, channel: "email", direction: "outbound", automated: true, body: `Your quote ${quote.number} from Apex Auto Detailing is ready to review.` }));
+  await must(supabase.from("follow_ups").insert({ customer_id: quote.customer_id, lead_id: quote.lead_id, vehicle_id: quote.vehicle_id ?? null, type: "quote", reason: `Follow up on ${quote.number} if not accepted`, last_contact_at: new Date().toISOString(), next_contact_at: new Date(Date.now() + 48 * 3600000).toISOString(), status: "scheduled" }));
+}
+
+export async function setQuoteStatus(quote: { id: string; number: string; customer_id: string; lead_id: string | null; vehicle_id?: string | null }, status: string) {
   await must(supabase.from("quotes").update({ status }).eq("id", quote.id));
   const titles: Record<string, string> = { sent: "Quote sent", accepted: "Quote accepted", declined: "Quote declined", viewed: "Quote viewed", expired: "Quote expired" };
-  await logActivity({ lead_id: quote.lead_id, customer_id: quote.customer_id, type: "quote", title: titles[status] ?? "Quote updated", detail: quote.number });
-  if (status === "sent") {
-    await must(supabase.from("messages").insert({ customer_id: quote.customer_id, lead_id: quote.lead_id, channel: "email", direction: "outbound", automated: true, body: `Your quote ${quote.number} from Apex Auto Detailing is ready to review.` }));
-    await must(supabase.from("follow_ups").insert({ customer_id: quote.customer_id, lead_id: quote.lead_id, type: "quote", reason: `Follow up on ${quote.number} if not accepted`, last_contact_at: new Date().toISOString(), next_contact_at: new Date(Date.now() + 48 * 3600000).toISOString(), status: "scheduled" }));
-  }
+  if (status !== "sent") await logActivity({ lead_id: quote.lead_id, customer_id: quote.customer_id, type: "quote", title: titles[status] ?? "Quote updated", detail: quote.number });
+  if (status === "sent") await quoteSentEffects(quote);
   if (status === "declined" && quote.lead_id) await must(supabase.from("leads").update({ status: "lost" }).eq("id", quote.lead_id));
 }
 
@@ -87,7 +92,7 @@ export async function sendMessage(m: { customer_id: string; lead_id?: string | n
 }
 
 export async function createFollowUp(f: { customer_id: string; vehicle_id?: string | null; lead_id?: string | null; type: string; reason: string; next_contact_at: string }) {
-  await must(supabase.from("follow_ups").insert({ ...f, vehicle_id: f.vehicle_id ?? null, lead_id: f.lead_id ?? null, status: "scheduled" }));
+  await must(supabase.from("follow_ups").insert({ customer_id: f.customer_id, type: f.type, reason: f.reason, next_contact_at: f.next_contact_at, vehicle_id: f.vehicle_id ?? null, lead_id: f.lead_id ?? null, status: "scheduled" }));
   await logActivity({ lead_id: f.lead_id, customer_id: f.customer_id, type: "follow_up", title: "Follow-up created", detail: f.reason });
 }
 

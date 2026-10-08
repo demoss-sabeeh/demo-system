@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, Pencil, Send, X } from "lucide-react";
+import { CalendarPlus, Check, Pencil, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { PageTitle, StatusBadge, RowsSkeleton, EmptyState } from "@/components/admin/ui";
-import { QuoteDialog } from "@/components/admin/dialogs";
+import { BookDialog, QuoteDialog } from "@/components/admin/dialogs";
 import { useQuotes, useInvalidate, type Quote } from "@/lib/admin-data";
 import { setQuoteStatus } from "@/lib/actions";
 import { fmtDate, fullName, label, money, QUOTE_STATUSES, vehicleName } from "@/lib/format";
@@ -67,6 +67,7 @@ function Quotes() {
 function QuotePreview({ q }: { q: Quote }) {
   const invalidate = useInvalidate();
   const [edit, setEdit] = useState(false);
+  const [book, setBook] = useState(false);
   const sub = q.items.reduce((a, i) => a + i.quantity * i.unit_price, 0);
   async function act(s: string) {
     try {
@@ -84,6 +85,7 @@ function QuotePreview({ q }: { q: Quote }) {
         <Button size="sm" onClick={() => act("sent")} disabled={q.status === "accepted"}><Send /> Send</Button>
         <Button size="sm" variant="outline" onClick={() => act("accepted")} disabled={q.status === "accepted"}><Check /> Accept</Button>
         <Button size="sm" variant="outline" onClick={() => act("declined")} disabled={q.status === "declined"}><X /> Decline</Button>
+        {q.status === "accepted" && <Button size="sm" variant="navy" onClick={() => setBook(true)}><CalendarPlus /> Book appointment</Button>}
       </div>
       <article className="rounded-md border bg-surface p-4 sm:p-6">
         <header className="grid min-w-0 gap-3 border-b pb-4 sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -107,6 +109,7 @@ function QuotePreview({ q }: { q: Quote }) {
       </article>
       {q.lead_id && <Link to="/admin/leads/$id" params={{ id: q.lead_id }} className="text-sm font-semibold text-primary">Open lead →</Link>}
       {edit && <QuoteDialog open onOpenChange={setEdit} quote={q} />}
+      {book && <BookDialog open onOpenChange={setBook} ctx={{ lead_id: q.lead_id, customer_id: q.customer_id, vehicle_id: q.vehicle_id, service_id: q.service_id, customerName: fullName(q.customer) }} />}
     </div>
   );
 }
