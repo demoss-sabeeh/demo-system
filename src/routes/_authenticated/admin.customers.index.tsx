@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { PageTitle, RowsSkeleton, EmptyState, ErrorState, inputSm, selectCls } from "@/components/admin/ui";
+import { RowDelete } from "@/components/admin/delete";
+import { deleteCustomer } from "@/lib/actions";
 import { useCustomers } from "@/lib/admin-data";
 import { fmtDate, fullName, vehicleName } from "@/lib/format";
 
@@ -29,14 +31,15 @@ function Customers() {
             {rows.map((x) => {
               const last = [...x.appointments].sort((a, b) => +new Date(b.starts_at) - +new Date(a.starts_at))[0];
               return (
-                <li key={x.id}>
-                  <Link to="/admin/customers/$id" params={{ id: x.id }} className="grid gap-1 px-4 py-3 hover:bg-secondary/40 md:grid-cols-12 md:items-center">
+                <li key={x.id} className="flex items-start md:items-center">
+                  <Link to="/admin/customers/$id" params={{ id: x.id }} className="grid min-w-0 flex-1 gap-1 py-3 pl-4 hover:bg-secondary/40 md:grid-cols-12 md:items-center">
                     <div className="md:col-span-3"><p className="font-bold text-navy">{fullName(x)}</p><p className="text-xs text-slate">{x.city}</p></div>
                     <p className="truncate text-sm text-slate md:col-span-3">{x.email}<span className="md:hidden"> · {x.phone}</span></p>
                     <p className="hidden text-sm text-slate md:col-span-2 md:block">{x.phone}</p>
                     <p className="truncate text-sm text-navy md:col-span-3">{x.vehicles.map(vehicleName).join(", ") || "—"}</p>
                     <p className="tabular text-xs text-slate md:col-span-1 md:text-right">{last ? fmtDate(last.starts_at) : "—"}</p>
                   </Link>
+                  <RowDelete className="px-1 pt-2 md:pt-0" kind="Customer" name={fullName(x)} detail={`This also removes their ${x.vehicles.length} vehicle(s) and all of their leads, quotes, appointments, messages and follow-ups.`} onConfirm={() => deleteCustomer(x.id)} />
                 </li>
               );
             })}

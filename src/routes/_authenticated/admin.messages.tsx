@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { PageTitle, RowsSkeleton, EmptyState, StatusBadge, inputSm } from "@/components/admin/ui";
 import { BookDialog, QuoteDialog, FollowUpDialog } from "@/components/admin/dialogs";
 import { useAppointments, useInvalidate, useLeads, useMessages, type Message } from "@/lib/admin-data";
-import { sendMessage, setLeadStatus } from "@/lib/actions";
+import { RowDelete } from "@/components/admin/delete";
+import { sendMessage, setLeadStatus, deleteMessage } from "@/lib/actions";
 import { fmtDateTime, fmtTime, fullName, timeAgo, vehicleName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -79,11 +80,12 @@ function Inbox() {
               </header>
               <div className="max-h-[45dvh] min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-4 lg:max-h-[440px]">
                 {active.list.map((m) => (
-                  <div key={m.id} className={cn("flex", m.direction === "outbound" && "justify-end")}>
+                  <div key={m.id} className={cn("group flex items-start gap-1", m.direction === "outbound" && "flex-row-reverse")}>
                     <div className={cn("min-w-0 max-w-[90%] break-words rounded-md px-3 py-2 text-sm [overflow-wrap:anywhere] sm:max-w-[78%]", m.direction === "outbound" ? "bg-navy text-navy-foreground" : "bg-secondary text-navy")}>
                       <p>{m.body}</p>
                       <p className={cn("mt-1 text-[10px]", m.direction === "outbound" ? "text-navy-muted" : "text-slate")}>{m.channel === "ai" ? "AI assistant" : m.channel.toUpperCase()}{m.automated ? " · automated" : ""} · {fmtTime(m.created_at)}</p>
                     </div>
+                    <RowDelete className="opacity-60 transition-opacity group-hover:opacity-100" kind="Message" name={`“${m.body.slice(0, 80)}${m.body.length > 80 ? "…" : ""}”`} detail="Only this message is removed; the rest of the conversation stays." onConfirm={() => deleteMessage(m.id)} />
                   </div>
                 ))}
               </div>

@@ -1,10 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Car, MessageSquarePlus, BellPlus, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Panel, StatusBadge, Timeline, RowsSkeleton, ErrorState } from "@/components/admin/ui";
 import { FollowUpDialog, MessageDialog } from "@/components/admin/dialogs";
+import { DeleteButton } from "@/components/admin/delete";
+import { deleteCustomer } from "@/lib/actions";
 import { useCustomer, useInvalidate } from "@/lib/admin-data";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDate, fmtDateTime, fmtTime, fullName, money, vehicleName } from "@/lib/format";
@@ -15,6 +17,7 @@ function CustomerProfile() {
   const { id } = Route.useParams();
   const q = useCustomer(id);
   const invalidate = useInvalidate();
+  const nav = useNavigate();
   const [dlg, setDlg] = useState<null | "msg" | "fu">(null);
   const [notes, setNotes] = useState<string | null>(null);
   if (q.isLoading) return <RowsSkeleton rows={8} />;
@@ -40,9 +43,10 @@ function CustomerProfile() {
           <p className="text-sm text-slate">{customer.email} · {customer.phone} · {customer.city}</p>
           <p className="mt-1 text-xs text-slate">Customer since {fmtDate(customer.created_at, { month: "long", year: "numeric" })}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={() => setDlg("msg")}><MessageSquarePlus /> Message</Button>
           <Button size="sm" variant="outline" onClick={() => setDlg("fu")}><BellPlus /> Follow-up</Button>
+          <DeleteButton kind="Customer" name={fullName(customer)} detail={`This also removes ${vehicles.length} vehicle(s), ${leads.length} lead(s), ${quotes.length} quote(s), ${appointments.length} appointment(s) and ${messages.length} message(s).`} onConfirm={() => deleteCustomer(customer.id)} onDeleted={() => nav({ to: "/admin/customers" })} />
         </div>
       </div>
 

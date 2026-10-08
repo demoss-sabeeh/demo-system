@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { PageTitle, StatusBadge, RowsSkeleton, EmptyState, selectCls, inputSm } from "@/components/admin/ui";
 import { AppointmentSheet } from "@/components/admin/AppointmentSheet";
+import { RowDelete } from "@/components/admin/delete";
+import { deleteAppointment } from "@/lib/actions";
 import { useAppointments, useServices, type Appointment } from "@/lib/admin-data";
 import { APPT_STATUSES, dayKey, fmtDate, fmtTime, fullName, label, vehicleName } from "@/lib/format";
 
@@ -32,12 +34,13 @@ function Appointments() {
               <h2 className="border-b bg-secondary/50 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-navy">{fmtDate(list[0].starts_at, { weekday: "long", month: "long", day: "numeric" })}{d === dayKey(new Date()) && <span className="ml-2 text-primary">Today</span>}</h2>
               <ul className="divide-y">
                 {list.map((x) => (
-                  <li key={x.id}>
-                    <button onClick={() => setSel(x)} className="flex w-full items-center gap-4 px-4 py-2.5 text-left hover:bg-secondary/40">
+                  <li key={x.id} className="flex items-center">
+                    <button onClick={() => setSel(x)} className="flex min-w-0 flex-1 items-center gap-4 py-2.5 pl-4 text-left hover:bg-secondary/40">
                       <span className="tabular w-16 text-sm font-bold text-navy">{fmtTime(x.starts_at)}</span>
                       <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-navy">{fullName(x.customer)}</span><span className="block truncate text-xs text-slate">{vehicleName(x.vehicle)} · {x.service?.name}</span></span>
                       <StatusBadge status={x.status} />
                     </button>
+                    <RowDelete className="px-1" kind="Appointment" name={`${x.service?.name ?? "Appointment"} · ${fullName(x.customer)} · ${fmtDate(x.starts_at)} ${fmtTime(x.starts_at)}`} onConfirm={() => deleteAppointment(x.id)} />
                   </li>
                 ))}
               </ul>

@@ -3,7 +3,8 @@ import { toast } from "sonner";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { StatusBadge, selectCls } from "./ui";
 import { useInvalidate, type Appointment } from "@/lib/admin-data";
-import { setAppointmentStatus } from "@/lib/actions";
+import { DeleteButton } from "./delete";
+import { setAppointmentStatus, deleteAppointment } from "@/lib/actions";
 import { APPT_STATUSES, fmtDate, fmtTime, fullName, label, vehicleName } from "@/lib/format";
 
 export function AppointmentSheet({ appt, onClose }: { appt: Appointment | null; onClose: () => void }) {
@@ -43,6 +44,7 @@ export function AppointmentSheet({ appt, onClose }: { appt: Appointment | null; 
               <p className="mt-2 text-xs text-slate">Completing an appointment updates vehicle history and schedules a post-service follow-up.</p>
             </div>
             {appt.lead_id && <Link to="/admin/leads/$id" params={{ id: appt.lead_id }} className="text-sm font-semibold text-primary">Open lead →</Link>}
+            <div className="border-t pt-4"><DeleteButton kind="Appointment" name={`${appt.service?.name ?? "Appointment"} · ${fullName(appt.customer)} · ${fmtDate(appt.starts_at)} ${fmtTime(appt.starts_at)}`} onConfirm={() => deleteAppointment(appt.id)} onDeleted={onClose} label="Delete appointment" /></div>
           </div>
         )}
       </SheetContent>

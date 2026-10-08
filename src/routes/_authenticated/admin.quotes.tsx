@@ -7,7 +7,8 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { PageTitle, StatusBadge, RowsSkeleton, EmptyState } from "@/components/admin/ui";
 import { BookDialog, QuoteDialog } from "@/components/admin/dialogs";
 import { useQuotes, useInvalidate, type Quote } from "@/lib/admin-data";
-import { setQuoteStatus } from "@/lib/actions";
+import { RowDelete, DeleteButton } from "@/components/admin/delete";
+import { setQuoteStatus, deleteQuote } from "@/lib/actions";
 import { fmtDate, fullName, label, money, QUOTE_STATUSES, vehicleName } from "@/lib/format";
 import { BUSINESS } from "@/lib/knowledge";
 import { cn } from "@/lib/utils";
@@ -41,14 +42,15 @@ function Quotes() {
         {quotes.isLoading ? <div className="p-4"><RowsSkeleton /></div> : rows.length === 0 ? <EmptyState title="No quotes" body="Create a quote from any lead." /> : (
           <ul className="divide-y">
             {rows.map((q) => (
-              <li key={q.id}>
-                <button onClick={() => nav({ search: { open: q.id } })} className="grid w-full gap-1 px-4 py-3 text-left hover:bg-secondary/40 md:grid-cols-12 md:items-center">
+              <li key={q.id} className="flex items-start md:items-center">
+                <button onClick={() => nav({ search: { open: q.id } })} className="grid min-w-0 flex-1 gap-1 py-3 pl-4 text-left hover:bg-secondary/40 md:grid-cols-12 md:items-center">
                   <span className="tabular font-bold text-navy md:col-span-2">{q.number}</span>
                   <span className="text-sm text-navy md:col-span-3">{fullName(q.customer)}</span>
                   <span className="text-sm text-slate md:col-span-3">{vehicleName(q.vehicle)} · {q.service?.name}</span>
                   <span className="tabular text-sm font-semibold text-navy md:col-span-2 md:text-right">{money(total(q))}</span>
                   <span className="md:col-span-2 md:text-right"><StatusBadge status={q.status} /></span>
                 </button>
+                <RowDelete className="px-1 pt-2 md:pt-0" kind="Quote" name={`${q.number} · ${fullName(q.customer)}`} onConfirm={() => deleteQuote(q.id)} />
               </li>
             ))}
           </ul>
@@ -57,14 +59,14 @@ function Quotes() {
       <Sheet open={!!selected} onOpenChange={(o) => !o && nav({ search: {} })}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
           <SheetTitle className="sr-only">Quote preview</SheetTitle>
-          {selected && <QuotePreview q={selected} />}
+          {selected && <QuotePreview q={selected} onDeleted={() => nav({ search: {} })} />}
         </SheetContent>
       </Sheet>
     </div>
   );
 }
 
-function QuotePreview({ q }: { q: Quote }) {
+function QuotePreview({ q, onDeleted }: { q: Quote; onDeleted: () => void }) {
   const invalidate = useInvalidate();
   const [edit, setEdit] = useState(false);
   const [book, setBook] = useState(false);
@@ -86,6 +88,7 @@ function QuotePreview({ q }: { q: Quote }) {
         <Button size="sm" variant="outline" onClick={() => act("accepted")} disabled={q.status === "accepted"}><Check /> Accept</Button>
         <Button size="sm" variant="outline" onClick={() => act("declined")} disabled={q.status === "declined"}><X /> Decline</Button>
         {q.status === "accepted" && <Button size="sm" variant="navy" onClick={() => setBook(true)}><CalendarPlus /> Book appointment</Button>}
+        <DeleteButton kind="Quote" name={`${q.number} · ${fullName(q.customer)}`} onConfirm={() => deleteQuote(q.id)} onDeleted={onDeleted} />
       </div>
       <article className="rounded-md border bg-surface p-4 sm:p-6">
         <header className="grid min-w-0 gap-3 border-b pb-4 sm:grid-cols-[minmax(0,1fr)_auto]">

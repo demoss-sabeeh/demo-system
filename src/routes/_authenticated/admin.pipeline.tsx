@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageTitle, RowsSkeleton, selectCls } from "@/components/admin/ui";
 import { useLeads, useInvalidate, type Lead } from "@/lib/admin-data";
-import { setLeadStatus } from "@/lib/actions";
+import { RowDelete } from "@/components/admin/delete";
+import { setLeadStatus, deleteLead } from "@/lib/actions";
 import { fullName, label, LEAD_STATUSES, money, timeAgo, vehicleName, type LeadStatus } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -66,7 +67,7 @@ function Pipeline() {
                         onDragStart={(e) => (e as unknown as React.DragEvent).dataTransfer.setData("text/plain", l.id)}
                         className="cursor-grab rounded-md border bg-surface p-3 active:cursor-grabbing"
                       >
-                        <Link to="/admin/leads/$id" params={{ id: l.id }} className="block text-sm font-bold text-navy hover:text-primary">{fullName(l.customer)}</Link>
+                        <div className="-mr-2 -mt-1.5 flex items-start justify-between gap-1"><Link to="/admin/leads/$id" params={{ id: l.id }} className="block min-w-0 pt-1.5 text-sm font-bold text-navy hover:text-primary">{fullName(l.customer)}</Link><RowDelete kind="Lead" name={`${fullName(l.customer)} — ${l.service?.name ?? "lead"}`} detail="Quotes, appointments and messages stay on the customer record." onConfirm={() => deleteLead(l.id)} /></div>
                         <p className="mt-0.5 truncate text-xs text-slate">{vehicleName(l.vehicle)}</p>
                         <p className="truncate text-xs font-medium text-navy">{l.service?.name}</p>
                         <div className="mt-2 flex items-center justify-between text-[11px]">

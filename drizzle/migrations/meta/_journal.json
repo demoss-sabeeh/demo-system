@@ -8,6 +8,13 @@
       "when": 1791413881821,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791502048368,
+      "tag": "0001_delete_record_functions",
+      "breakpoints": true
     }
   ]
 }

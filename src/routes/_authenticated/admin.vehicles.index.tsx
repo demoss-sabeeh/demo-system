@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Car, Search } from "lucide-react";
 import { PageTitle, RowsSkeleton, EmptyState, inputSm } from "@/components/admin/ui";
+import { RowDelete } from "@/components/admin/delete";
+import { deleteVehicle } from "@/lib/actions";
 import { useVehicles } from "@/lib/admin-data";
 import { fmtDate, fullName, vehicleName } from "@/lib/format";
 
@@ -21,7 +23,7 @@ function Vehicles() {
             const done = x.appointments.filter((a) => a.status === "completed").sort((a, b) => +new Date(b.starts_at) - +new Date(a.starts_at));
             return (
               <Link key={x.id} to="/admin/vehicles/$id" params={{ id: x.id }} className="rounded-md border bg-surface p-4 transition-colors hover:border-primary">
-                <div className="flex items-start justify-between"><Car className="h-5 w-5 text-primary" /><span className="text-[11px] text-slate">{x.color}</span></div>
+                <div className="flex items-start justify-between"><Car className="h-5 w-5 text-primary" /><span className="-mr-2 -mt-2 flex items-center text-[11px] text-slate">{x.color}<RowDelete kind="Vehicle" name={vehicleName(x)} detail="Its leads, quotes and appointments stay on the customer record." onConfirm={() => deleteVehicle(x.id)} /></span></div>
                 <p className="mt-3 font-bold text-navy">{vehicleName(x)}</p>
                 <p className="text-xs text-slate">Owner · {fullName(x.customer)}</p>
                 <p className="mt-3 border-t pt-2 text-xs text-slate">Last service: <span className="font-semibold text-navy">{done[0] ? `${done[0].service?.name} · ${fmtDate(done[0].starts_at)}` : "None yet"}</span></p>

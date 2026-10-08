@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowUpDown, Search } from "lucide-react";
 import { PageTitle, StatusBadge, RowsSkeleton, EmptyState, ErrorState, selectCls, inputSm } from "@/components/admin/ui";
+import { RowDelete } from "@/components/admin/delete";
+import { deleteLead } from "@/lib/actions";
 import { useLeads, useServices } from "@/lib/admin-data";
 import { fullName, label, LEAD_SOURCES, LEAD_STATUSES, money, timeAgo, vehicleName } from "@/lib/format";
 
@@ -57,7 +59,7 @@ function LeadsPage() {
           <>
             <table className="hidden w-full text-sm md:table">
               <thead className="border-b bg-secondary/50 text-left text-[10px] font-bold uppercase tracking-[0.1em] text-slate">
-                <tr>{["Customer", "Vehicle", "Service", "Source", "Status", "Created", "Est. value"].map((h) => <th key={h} className="px-4 py-2.5 font-bold">{h}</th>)}</tr>
+                <tr>{["Customer", "Vehicle", "Service", "Source", "Status", "Created", "Est. value"].map((h) => <th key={h} className="px-4 py-2.5 font-bold">{h}</th>)}<th className="w-12"><span className="sr-only">Actions</span></th></tr>
               </thead>
               <tbody className="divide-y">
                 {rows.map((l) => (
@@ -69,18 +71,20 @@ function LeadsPage() {
                     <td className="px-4 py-2.5"><StatusBadge status={l.status} /></td>
                     <td className="tabular px-4 py-2.5 text-slate">{timeAgo(l.created_at)}</td>
                     <td className="tabular px-4 py-2.5 text-right font-semibold text-navy">{money(l.estimated_value)}</td>
+                    <td className="pr-2"><RowDelete kind="Lead" name={`${fullName(l.customer)} — ${l.service?.name ?? "lead"}`} detail="Quotes, appointments and messages stay on the customer record." onConfirm={() => deleteLead(l.id)} /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <ul className="divide-y md:hidden">
               {rows.map((l) => (
-                <li key={l.id}>
-                  <Link to="/admin/leads/$id" params={{ id: l.id }} className="block px-4 py-3">
+                <li key={l.id} className="flex items-start">
+                  <Link to="/admin/leads/$id" params={{ id: l.id }} className="block min-w-0 flex-1 py-3 pl-4">
                     <div className="flex items-center justify-between gap-2"><p className="font-bold text-navy">{fullName(l.customer)}</p><StatusBadge status={l.status} /></div>
                     <p className="mt-0.5 text-xs text-slate">{vehicleName(l.vehicle)} · {l.service?.name}</p>
                     <p className="tabular mt-1 flex justify-between text-xs"><span className="text-slate">{label(l.source)} · {timeAgo(l.created_at)}</span><span className="font-semibold text-navy">{money(l.estimated_value)}</span></p>
                   </Link>
+                  <RowDelete className="px-1 pt-2" kind="Lead" name={`${fullName(l.customer)} — ${l.service?.name ?? "lead"}`} detail="Quotes, appointments and messages stay on the customer record." onConfirm={() => deleteLead(l.id)} />
                 </li>
               ))}
             </ul>
