@@ -113,5 +113,5 @@ export function Timeline({ items, fmt }: { items: TimelineItem[]; fmt: (d: strin
   );
 }
 
-export const selectCls = "h-9 rounded-md border border-input bg-surface px-2.5 text-sm text-navy outline-none focus:border-primary";
-export const inputSm = "h-9 w-full rounded-md border border-input bg-surface px-3 text-sm text-navy outline-none placeholder:text-muted-foreground focus:border-primary";
+export const selectCls = "h-11 min-w-0 max-w-full rounded-md border border-input bg-surface px-2.5 text-base sm:h-9 sm:text-sm text-navy outline-none focus:border-primary";
+export const inputSm = "h-11 min-w-0 w-full rounded-md border border-input bg-surface px-3 text-base sm:h-9 sm:text-sm text-navy outline-none placeholder:text-muted-foreground focus:border-primary";

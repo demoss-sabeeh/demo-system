@@ -56,9 +56,9 @@ export function SiteLayout({ children }: { children: ReactNode }) {
           </div>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu"><Menu /></Button>
+              <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 lg:hidden" aria-label="Open menu"><Menu /></Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[85vw] max-w-sm bg-background">
+            <SheetContent side="right" className="w-[85vw] max-w-sm overflow-y-auto bg-background pb-[max(1.5rem,env(safe-area-inset-bottom))]">
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <nav className="mt-8 flex flex-col" aria-label="Mobile">
                 {NAV.map((n) => (
