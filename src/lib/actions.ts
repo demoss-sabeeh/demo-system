@@ -100,3 +100,25 @@ export async function resetDemo() {
   const { error } = await supabase.rpc("reset_demo");
   if (error) throw new Error(error.message);
 }
+
+// ---- Deletes ----------------------------------------------------------------
+// Leads/vehicles detach related history; customers remove their own history;
+// services refuse deletion while referenced (see delete_* SQL functions).
+const rpc = (fn: "delete_lead" | "delete_vehicle" | "delete_customer" | "delete_service", id: string) => must(supabase.rpc(fn, { _id: id }));
+export const deleteLead = (id: string) => rpc("delete_lead", id);
+export const deleteVehicle = (id: string) => rpc("delete_vehicle", id);
+export const deleteCustomer = (id: string) => rpc("delete_customer", id);
+export const deleteService = (id: string) => rpc("delete_service", id);
+
+async function deleteRow(table: "appointments" | "follow_ups" | "messages", id: string) {
+  const rows = await must(supabase.from(table).delete().eq("id", id).select("id"));
+  if (!rows || !(rows as unknown[]).length) throw new Error("Record not found or already deleted");
+}
+export const deleteAppointment = (id: string) => deleteRow("appointments", id);
+export const deleteFollowUp = (id: string) => deleteRow("follow_ups", id);
+export const deleteMessage = (id: string) => deleteRow("messages", id);
+export async function deleteQuote(id: string) {
+  await must(supabase.from("quote_items").delete().eq("quote_id", id));
+  const rows = await must(supabase.from("quotes").delete().eq("id", id).select("id"));
+  if (!rows || !(rows as unknown[]).length) throw new Error("Quote not found or already deleted");
+}
