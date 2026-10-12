@@ -5,6 +5,7 @@ import { Zap, Filter, Play, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { PageTitle, Panel, RowsSkeleton, StatusBadge } from "@/components/admin/ui";
+import { RunDemoButton } from "@/components/admin/RunDemo";
 import { useAutomationRuns, useAutomations, useInvalidate, type Automation } from "@/lib/admin-data";
 import { supabase } from "@/integrations/supabase/client";
 import { fullName, timeAgo } from "@/lib/format";
@@ -55,7 +56,7 @@ function Automations() {
 
   return (
     <div className="space-y-5">
-      <PageTitle title="Automation Center" subtitle="The workflows running your customer journey in the background." />
+      <PageTitle title="Automation Center" subtitle="The workflows running your customer journey in the background." actions={<RunDemoButton />} />
       {autos.isLoading ? <RowsSkeleton /> : (
         <div className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
           <ul className="space-y-2">
