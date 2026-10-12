@@ -72,3 +72,26 @@ export function knowledgeAsText() {
     `Booking: appointment start times are ${TIME_SLOTS.join(", ")}. Customers can book at /book or request a quote at /quote.`,
   ].join("\n");
 }
+
+export type AddonInfo = { slug: string; name: string; description: string; price: number; durationHours: number };
+
+// Optional extras that can be added to any booking. Prices are flat, in USD.
+export const ADDONS: AddonInfo[] = [
+  { slug: "engine-bay", name: "Engine bay detail", description: "Degrease, steam and dress the engine bay.", price: 79, durationHours: 0.5 },
+  { slug: "headlight-restoration", name: "Headlight restoration", description: "Remove haze and yellowing, then UV-seal.", price: 99, durationHours: 0.5 },
+  { slug: "pet-hair-removal", name: "Pet hair removal", description: "Extra extraction for embedded pet hair.", price: 59, durationHours: 0.5 },
+  { slug: "odor-treatment", name: "Odor treatment", description: "Ozone treatment for smoke and lingering odors.", price: 89, durationHours: 0.5 },
+  { slug: "glass-coating", name: "Glass coating", description: "Hydrophobic coating on all exterior glass.", price: 69, durationHours: 0.5 },
+  { slug: "wheel-off-coating", name: "Wheels-off ceramic coating", description: "Wheels removed and coated inside and out.", price: 249, durationHours: 1 },
+];
+
+export const addonBySlug = (slug: string) => ADDONS.find((a) => a.slug === slug);
+
+/** Combined price and duration for a set of services and add-ons. */
+export function bookingCart(serviceSlugs: string[], addonSlugs: string[]) {
+  const services = serviceSlugs.map((s) => serviceBySlug(s)).filter((s): s is ServiceInfo => !!s);
+  const addons = addonSlugs.map((s) => addonBySlug(s)).filter((a): a is AddonInfo => !!a);
+  const price = services.reduce((t, s) => t + s.priceFrom, 0) + addons.reduce((t, a) => t + a.price, 0);
+  const durationHours = services.reduce((t, s) => t + s.durationHours, 0) + addons.reduce((t, a) => t + a.durationHours, 0);
+  return { services, addons, price, durationHours };
+}
