@@ -4,14 +4,6 @@ import { bookingDayBounds, businessLocalToIso, isSlotWithinBusinessHours, valida
 import { createPublicCustomer, createPublicVehicle, serviceBySlug } from "./intake.server";
 import { knowledgeAsText, SERVICES, BUSINESS, TIME_SLOTS, ADDONS, addonBySlug } from "./knowledge";
 
-function configuredPublicBusinessId(): string {
-  const businessId = process.env["OPERANTSCALE_PUBLIC_BUSINESS_ID"];
-  if (!businessId || !z.string().uuid().safeParse(businessId).success) {
-    throw new Error("Public business is not configured.");
-  }
-  return businessId;
-}
-
 const contact = z.object({
   firstName: z.string().trim().min(1).max(60),
   lastName: z.string().trim().min(1).max(60),
@@ -39,16 +31,14 @@ export const submitQuoteRequest = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => quoteSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const businessId = configuredPublicBusinessId();
-    const svc = await serviceBySlug(db, businessId, data.serviceSlug);
-    const customerId = await createPublicCustomer(db, businessId, data.contact);
-    const vehicleId = await createPublicVehicle(db, businessId, customerId, data.vehicle);
+    const svc = await serviceBySlug(db, data.serviceSlug);
+    const customerId = await createPublicCustomer(db, data.contact);
+    const vehicleId = await createPublicVehicle(db, customerId, data.vehicle);
     const premium = ["BMW", "Porsche", "Mercedes", "Mercedes-AMG", "Audi", "Land Rover", "Range Rover", "Chevrolet"].some((m) => data.vehicle.make.toLowerCase().includes(m.toLowerCase()));
     const estimate = svc.price_from + (premium ? 300 : 100);
     const { data: lead, error } = await db
       .from("leads")
       .insert({
-        business_id: businessId,
         customer_id: customerId,
         vehicle_id: vehicleId,
         service_id: svc.id,
@@ -64,7 +54,6 @@ export const submitQuoteRequest = createServerFn({ method: "POST" })
       .single();
     if (error || !lead) throw new Error("We couldn't submit your request. Please try again.");
     const { error: activityError } = await db.from("lead_activities").insert({
-      business_id: businessId,
       lead_id: lead.id,
       customer_id: customerId,
       type: "inquiry",
@@ -73,7 +62,6 @@ export const submitQuoteRequest = createServerFn({ method: "POST" })
     });
     if (activityError) throw new Error("We couldn't record your request activity.");
     const { error: notificationError } = await db.from("notifications").insert({
-      business_id: businessId,
       title: "New website inquiry",
       body: `${data.contact.firstName} ${data.contact.lastName} requested ${svc.name}.`,
     });
@@ -90,10 +78,10 @@ const cartSchema = {
 
 type DBClient = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
 
-async function resolveCart(db: DBClient, businessId: string, input: { serviceSlugs?: string[]; serviceSlug?: string; addonSlugs: string[] }) {
+async function resolveCart(db: DBClient, input: { serviceSlugs?: string[]; serviceSlug?: string; addonSlugs: string[] }) {
   const slugs = [...new Set(input.serviceSlugs?.length ? input.serviceSlugs : input.serviceSlug ? [input.serviceSlug] : [])];
   if (!slugs.length) throw new Error("Choose at least one service.");
-  const services = await Promise.all(slugs.map((slug) => serviceBySlug(db, businessId, slug)));
+  const services = await Promise.all(slugs.map((slug) => serviceBySlug(db, slug)));
   const addons = [...new Set(input.addonSlugs)].map((slug) => {
     const a = addonBySlug(slug);
     if (!a) throw new Error("Unknown add-on.");
@@ -105,12 +93,11 @@ async function resolveCart(db: DBClient, businessId: string, input: { serviceSlu
   return { primary: services[0], services, addons, durationHours, price, label };
 }
 
-async function bookedRanges(db: DBClient, businessId: string, date: string) {
+async function bookedRanges(db: DBClient, date: string) {
   const bounds = bookingDayBounds(date);
   const { data: rows, error } = await db
     .from("appointments")
     .select("starts_at,duration_hours")
-    .eq("business_id", businessId)
     .gte("starts_at", bounds.start)
     .lt("starts_at", bounds.end)
     .not("status", "in", "(cancelled,no_show)");
@@ -127,11 +114,10 @@ export const getAvailability = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ date: z.string().max(10), ...cartSchema }).parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const businessId = configuredPublicBusinessId();
     const weekday = validateBookingDate(data.date);
     if (weekday === 0) return { slots: [] as { time: string; available: boolean }[], closed: true, durationHours: 0 };
-    const cart = await resolveCart(db, businessId, data);
-    const ranges = await bookedRanges(db, businessId, data.date);
+    const cart = await resolveCart(db, data);
+    const ranges = await bookedRanges(db, data.date);
     const now = Date.now();
     const slots = (weekday === 6 ? TIME_SLOTS.slice(1, 3) : TIME_SLOTS).map((time) => {
       if (!isSlotWithinBusinessHours(data.date, time, cart.durationHours)) return { time, available: false };
@@ -154,33 +140,32 @@ export const createBooking = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => bookingSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const businessId = configuredPublicBusinessId();
-    const cart = await resolveCart(db, businessId, data);
+    const cart = await resolveCart(db, data);
     const startsAt = validateBookingSlot(data.date, data.time, cart.durationHours);
     const proposedStart = new Date(startsAt).getTime();
-    const ranges = await bookedRanges(db, businessId, data.date);
+    const ranges = await bookedRanges(db, data.date);
     if (overlaps(ranges, proposedStart, proposedStart + cart.durationHours * 3_600_000)) throw new Error("That time was just booked. Please choose another slot.");
-    const customerId = await createPublicCustomer(db, businessId, data.contact);
-    const vehicleId = await createPublicVehicle(db, businessId, customerId, data.vehicle);
+    const customerId = await createPublicCustomer(db, data.contact);
+    const vehicleId = await createPublicVehicle(db, customerId, data.vehicle);
     const notes = [`Requested: ${cart.label}`, data.notes?.trim()].filter(Boolean).join("\n");
     const { data: lead, error: leadError } = await db
       .from("leads")
-      .insert({ business_id: businessId, customer_id: customerId, vehicle_id: vehicleId, service_id: cart.primary.id, source: "website", status: "new", estimated_value: cart.price, preferred_date: data.date, preferred_time: data.time, notes })
+      .insert({ customer_id: customerId, vehicle_id: vehicleId, service_id: cart.primary.id, source: "website", status: "new", estimated_value: cart.price, preferred_date: data.date, preferred_time: data.time, notes })
       .select("id")
       .single();
     if (leadError || !lead) throw new Error("We couldn't save your booking request. Please try again.");
     const { data: appt, error } = await db
       .from("appointments")
-      .insert({ business_id: businessId, customer_id: customerId, vehicle_id: vehicleId, service_id: cart.primary.id, lead_id: lead.id, starts_at: startsAt, duration_hours: cart.durationHours, status: "requested", notes })
+      .insert({ customer_id: customerId, vehicle_id: vehicleId, service_id: cart.primary.id, lead_id: lead.id, starts_at: startsAt, duration_hours: cart.durationHours, status: "requested", notes })
       .select("id, location")
       .single();
     if (error || !appt) {
       await db.from("leads").delete().eq("id", lead.id);
       throw new Error("We couldn't save your appointment. Please try again.");
     }
-    const { error: activitiesError } = await db.from("lead_activities").insert({ business_id: businessId, lead_id: lead.id, customer_id: customerId, type: "inquiry", title: "Online appointment request submitted", detail: `${cart.label} requested for ${data.date} at ${data.time}` });
+    const { error: activitiesError } = await db.from("lead_activities").insert({ lead_id: lead.id, customer_id: customerId, type: "inquiry", title: "Online appointment request submitted", detail: `${cart.label} requested for ${data.date} at ${data.time}` });
     if (activitiesError) throw new Error("We couldn't record booking activity.");
-    const { error: notificationError } = await db.from("notifications").insert({ business_id: businessId, title: "New appointment request", body: `${data.contact.firstName} ${data.contact.lastName} requested ${cart.label} for ${data.date} at ${data.time}.` });
+    const { error: notificationError } = await db.from("notifications").insert({ title: "New appointment request", body: `${data.contact.firstName} ${data.contact.lastName} requested ${cart.label} for ${data.date} at ${data.time}.` });
     if (notificationError) throw new Error("Could not notify the business about the booking.");
     return { appointmentId: appt.id, location: appt.location, service: cart.label, price: cart.price, durationHours: cart.durationHours };
   });

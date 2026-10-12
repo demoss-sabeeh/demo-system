@@ -117,3 +117,8 @@ export async function deleteQuote(id: string) {
   const rows = await must(supabase.from("quotes").delete().eq("id", id).select("id"));
   if (!rows || !(rows as unknown[]).length) throw new Error("Quote not found or already deleted");
 }
+
+export async function resetDemo() {
+  const { error } = await supabase.rpc("reset_demo");
+  if (error) throw new Error(error.message);
+}
