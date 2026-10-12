@@ -23,7 +23,9 @@ export function AssistantWidget() {
   const endRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [msgs, busy]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs, busy]);
   useEffect(() => {
     if (!open) return;
     const viewport = window.visualViewport;
