@@ -10,7 +10,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Field, OptionCard, StepPanel, Stepper, Summary, inputCls } from "@/components/site/Wizard";
-import { SERVICES, serviceBySlug, BUSINESS } from "@/lib/knowledge";
+import { SERVICES, ADDONS, serviceBySlug, bookingCart, BUSINESS } from "@/lib/knowledge";
 import { money, TZ } from "@/lib/format";
 import { createBooking, getAvailability } from "@/lib/public.functions";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,10 @@ export const Route = createFileRoute("/book")({
   component: BookPage,
 });
 
-const STEPS = ["Service", "Vehicle", "Date", "Time", "Contact", "Confirm"];
+const MAX_VISIT_HOURS = 10;
+const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+
+const STEPS = ["Services", "Vehicle", "Date", "Time", "Contact", "Confirm"];
 
 function nextDays(n: number) {
   const out: { key: string; dow: string; day: string; mon: string; sunday: boolean }[] = [];
@@ -48,16 +51,16 @@ function BookPage() {
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ location: string } | null>(null);
-  const [f, setF] = useState({ service: search.service && serviceBySlug(search.service) ? search.service : "", year: "", make: "", model: "", color: "", date: "", time: "", firstName: "", lastName: "", email: "", phone: "", notes: "" });
-  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }));
+  const [f, setF] = useState({ services: search.service && serviceBySlug(search.service) ? [search.service] : ([] as string[]), addons: [] as string[], year: "", make: "", model: "", color: "", date: "", time: "", firstName: "", lastName: "", email: "", phone: "", notes: "" });
+  const set = (k: "year" | "make" | "model" | "color" | "firstName" | "lastName" | "email" | "phone" | "notes") => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }));
   const days = useMemo(() => nextDays(14), []);
   const avail = useServerFn(getAvailability);
   const book = useServerFn(createBooking);
-  const slots = useQuery({ queryKey: ["availability", f.date, f.service], queryFn: () => avail({ data: { date: f.date, serviceSlug: f.service } }), enabled: !!f.date && !!f.service && step === 3 });
-  const svc = serviceBySlug(f.service);
+  const slots = useQuery({ queryKey: ["availability", f.date, f.services, f.addons], queryFn: () => avail({ data: { date: f.date, serviceSlugs: f.services, addonSlugs: f.addons } }), enabled: !!f.date && f.services.length > 0 && step === 3 });
+  const cart = bookingCart(f.services, f.addons);
 
   const checks: Record<number, () => Record<string, string | undefined>> = {
-    0: () => (f.service ? {} : { service: "Choose a service" }),
+    0: () => (!f.services.length ? { service: "Choose at least one service" } : cart.durationHours > MAX_VISIT_HOURS ? { service: `This is about ${cart.durationHours} hours of work, more than one day. Remove a service, or request a quote for a multi-day visit.` } : {}),
     1: () => {
       const r = z.object({ year: z.coerce.number().int().min(1950).max(2030), make: z.string().trim().min(1), model: z.string().trim().min(1) }).safeParse(f);
       return r.success ? {} : Object.fromEntries(r.error.issues.map((i) => [String(i.path[0]), "Required"]));
@@ -83,7 +86,8 @@ function BookPage() {
         data: {
           contact: { firstName: f.firstName, lastName: f.lastName, email: f.email, phone: f.phone },
           vehicle: { year: Number(f.year), make: f.make, model: f.model, color: f.color },
-          serviceSlug: f.service,
+          serviceSlugs: f.services,
+          addonSlugs: f.addons,
           date: f.date,
           time: f.time,
           notes: f.notes,
@@ -101,7 +105,10 @@ function BookPage() {
   const rows: [string, string][] = [
     ["Customer", `${f.firstName} ${f.lastName}`],
     ["Vehicle", `${f.year} ${f.make} ${f.model}`],
-    ["Service", svc ? `${svc.name} · ~${svc.durationHours} hrs` : ""],
+    ["Services", cart.services.map((s) => s.name).join(", ")],
+    ["Add-ons", cart.addons.length ? cart.addons.map((a) => a.name).join(", ") : "None"],
+    ["Estimated time", `~${cart.durationHours} hrs`],
+    ["Starting price", money(cart.price)],
     ["Date", dateLabel],
     ["Time", f.time],
     ["Location", done?.location ?? `Apex Studio — ${BUSINESS.address}`],
@@ -129,11 +136,20 @@ function BookPage() {
               <Stepper steps={STEPS} current={step} />
               <div className="mt-6 min-h-[380px] sm:mt-10">
                 {step === 0 && (
-                  <StepPanel k={0} title="Select a service">
+                  <StepPanel k={0} title="Select services">
+                    <p className="-mt-4 mb-4 text-sm text-slate">Choose one or more services for this visit.</p>
                     <div className="grid gap-2">
-                      {SERVICES.map((s) => <OptionCard key={s.slug} selected={f.service === s.slug} onClick={() => setF((p) => ({ ...p, service: s.slug }))} title={s.name} meta={`From ${money(s.priceFrom)} · ~${s.durationHours} hrs`} />)}
+                      {SERVICES.map((s) => <OptionCard key={s.slug} selected={f.services.includes(s.slug)} onClick={() => setF((p) => ({ ...p, services: toggle(p.services, s.slug), time: "" }))} title={s.name} meta={`From ${money(s.priceFrom)} · ~${s.durationHours} hrs`} />)}
                     </div>
-                    {errors.service && <p className="mt-2 text-xs text-destructive" role="alert">{errors.service}</p>}
+                    <h3 className="mt-8 text-xs font-bold uppercase tracking-[0.12em] text-slate">Add-ons <span className="font-medium normal-case tracking-normal">(optional)</span></h3>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {ADDONS.map((a) => <OptionCard key={a.slug} selected={f.addons.includes(a.slug)} onClick={() => setF((p) => ({ ...p, addons: toggle(p.addons, a.slug), time: "" }))} title={a.name} meta={`+${money(a.price)}`} />)}
+                    </div>
+                    <div className="mt-6 grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3 rounded-md border bg-surface px-4 py-3" aria-live="polite">
+                      <span className="text-sm text-slate">{f.services.length} service{f.services.length === 1 ? "" : "s"}{f.addons.length ? ` + ${f.addons.length} add-on${f.addons.length === 1 ? "" : "s"}` : ""} · ~{cart.durationHours} hrs</span>
+                      <span className="font-bold text-navy">From {money(cart.price)}</span>
+                    </div>
+                    {errors.service && <p className="mt-2 text-sm text-destructive" role="alert">{errors.service}</p>}
                   </StepPanel>
                 )}
                 {step === 1 && (
