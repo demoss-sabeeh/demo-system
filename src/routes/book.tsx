@@ -56,7 +56,7 @@ function BookPage() {
   const days = useMemo(() => nextDays(14), []);
   const avail = useServerFn(getAvailability);
   const book = useServerFn(createBooking);
-  const slots = useQuery({ queryKey: ["availability", f.date, f.services, f.addons], queryFn: () => avail({ data: { date: f.date, serviceSlugs: f.services, addonSlugs: f.addons } }), enabled: !!f.date && f.services.length > 0 && step === 3 });
+  const slots = useQuery({ queryKey: ["availability", f.date, f.services, f.addons], queryFn: () => avail({ data: { date: f.date, serviceSlugs: f.services, addonSlugs: f.addons } }), enabled: !!f.date && f.services.length > 0 && step === 3, retry: 3, retryDelay: (n) => Math.min(1000 * 2 ** n, 5000) });
   const cart = bookingCart(f.services, f.addons);
 
   const checks: Record<number, () => Record<string, string | undefined>> = {
