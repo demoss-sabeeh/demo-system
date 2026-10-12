@@ -96,11 +96,6 @@ export async function createFollowUp(f: { customer_id: string; vehicle_id?: stri
   await logActivity({ lead_id: f.lead_id, customer_id: f.customer_id, type: "follow_up", title: "Follow-up created", detail: f.reason });
 }
 
-export async function resetDemo() {
-  const { error } = await supabase.rpc("reset_demo");
-  if (error) throw new Error(error.message);
-}
-
 // ---- Deletes ----------------------------------------------------------------
 // Leads/vehicles detach related history; customers remove their own history;
 // services refuse deletion while referenced (see delete_* SQL functions).

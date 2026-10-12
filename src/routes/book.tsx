@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "motion/react";
-import { ArrowLeft, ArrowRight, CalendarCheck2, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarClock, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Field, OptionCard, StepPanel, Stepper, Summary, inputCls } from "@/components/site/Wizard";
 import { SERVICES, serviceBySlug, BUSINESS } from "@/lib/knowledge";
-import { localToIso, money, TZ } from "@/lib/format";
+import { money, TZ } from "@/lib/format";
 import { createBooking, getAvailability } from "@/lib/public.functions";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +53,7 @@ function BookPage() {
   const days = useMemo(() => nextDays(14), []);
   const avail = useServerFn(getAvailability);
   const book = useServerFn(createBooking);
-  const slots = useQuery({ queryKey: ["availability", f.date], queryFn: () => avail({ data: { date: f.date } }), enabled: !!f.date && step === 3 });
+  const slots = useQuery({ queryKey: ["availability", f.date, f.service], queryFn: () => avail({ data: { date: f.date, serviceSlug: f.service } }), enabled: !!f.date && !!f.service && step === 3 });
   const svc = serviceBySlug(f.service);
 
   const checks: Record<number, () => Record<string, string | undefined>> = {
@@ -86,7 +86,6 @@ function BookPage() {
           serviceSlug: f.service,
           date: f.date,
           time: f.time,
-          startsAt: localToIso(f.date, f.time),
           notes: f.notes,
         },
       });
@@ -114,14 +113,14 @@ function BookPage() {
         <aside className="lg:col-span-4">
           <p className="eyebrow text-primary">Book online</p>
           <h1 className="mt-3 font-display text-5xl leading-none text-navy">Choose your time.</h1>
-          <p className="mt-4 text-slate">Real-time availability. You'll receive a confirmation and a reminder before your visit.</p>
+          <p className="mt-4 text-slate">Choose an available time to request. The appointment is not confirmed until the team contacts you.</p>
         </aside>
         <div className="lg:col-span-8">
           {done ? (
             <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="rounded-md border bg-surface p-8 md:p-12">
-              <CalendarCheck2 className="h-10 w-10 text-success" />
-              <h2 className="mt-5 break-words font-display text-4xl text-navy sm:text-5xl">Appointment confirmed.</h2>
-              <p className="mt-3 text-slate">A confirmation was sent to {f.phone}. We'll send a reminder 24 hours before.</p>
+              <CalendarClock className="h-10 w-10 text-success" />
+              <h2 className="mt-5 break-words font-display text-4xl text-navy sm:text-5xl">Request received.</h2>
+              <p className="mt-3 text-slate">Your requested time is not confirmed yet. The team will contact you at {f.phone} to confirm availability.</p>
               <div className="mt-8 max-w-lg"><Summary rows={rows} /></div>
               <Button asChild variant="cta-outline" size="lg" className="mt-8"><Link to="/">Back to home</Link></Button>
             </motion.div>
@@ -170,7 +169,7 @@ function BookPage() {
                       <p className="text-destructive">Couldn't load availability. <button className="underline" onClick={() => slots.refetch()}>Retry</button></p>
                     ) : slots.data?.slots.length ? (
                       <div className="grid gap-2 sm:grid-cols-2">
-                        {slots.data.slots.map((s) => <OptionCard key={s.time} disabled={!s.available} selected={f.time === s.time} onClick={() => setF((p) => ({ ...p, time: s.time }))} title={s.time} meta={s.available ? "Available" : "Booked"} />)}
+                        {slots.data.slots.map((s) => <OptionCard key={s.time} disabled={!s.available} selected={f.time === s.time} onClick={() => setF((p) => ({ ...p, time: s.time }))} title={s.time} meta={s.available ? "Available" : "Unavailable"} />)}
                       </div>
                     ) : (
                       <p className="text-slate">We're closed that day. Please choose another date.</p>
@@ -189,14 +188,14 @@ function BookPage() {
                     </div>
                   </StepPanel>
                 )}
-                {step === 5 && <StepPanel k={5} title="Confirm your appointment"><Summary rows={rows} /></StepPanel>}
+                {step === 5 && <StepPanel k={5} title="Review appointment request"><Summary rows={rows} /></StepPanel>}
               </div>
               <div className="mt-8 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-t pt-6 sm:flex sm:justify-between">
                 <Button variant="ghost" onClick={() => setStep((s) => s - 1)} disabled={step === 0 || busy}><ArrowLeft /> Back</Button>
                 {step < 5 ? (
                   <Button variant="cta" size="lg" onClick={next}>Continue <ArrowRight /></Button>
                 ) : (
-                  <Button variant="cta" size="lg" className="h-auto min-h-12 whitespace-normal px-3 py-3 sm:px-7" onClick={confirm} disabled={busy}>{busy ? <><Loader2 className="animate-spin" /> Confirming</> : "Confirm appointment"}</Button>
+                  <Button variant="cta" size="lg" className="h-auto min-h-12 whitespace-normal px-3 py-3 sm:px-7" onClick={confirm} disabled={busy}>{busy ? <><Loader2 className="animate-spin" /> Submitting</> : "Submit appointment request"}</Button>
                 )}
               </div>
             </>
