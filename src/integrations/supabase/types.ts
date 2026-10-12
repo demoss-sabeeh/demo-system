@@ -733,6 +733,32 @@ export type Database = {
       is_business_member: { Args: { _business_id: string }; Returns: boolean }
       is_business_public: { Args: { _business_id: string }; Returns: boolean }
       seed_demo: { Args: never; Returns: undefined }
+      submit_public_booking_request: {
+        Args: {
+          p_business_id: string
+          p_contact: Json
+          p_date: string
+          p_notes?: string
+          p_service_slug: string
+          p_starts_at: string
+          p_time: string
+          p_vehicle: Json
+        }
+        Returns: Json
+      }
+      submit_public_quote_request: {
+        Args: {
+          p_business_id: string
+          p_condition?: string
+          p_contact: Json
+          p_notes?: string
+          p_preferred_date?: string | null
+          p_preferred_time?: string | null
+          p_service_slug: string
+          p_vehicle: Json
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,4 +1,4 @@
--- Run only against a disposable database after applying migrations 0000-0003.
+-- Run only against a disposable database after applying migrations 0000-0004.
 -- All fixtures and attempted mutations are rolled back at the end.
 begin;
 
@@ -122,6 +122,26 @@ select pg_temp.assert_denied($query$
   where business_id = '20000000-0000-0000-0000-000000000001'
     and user_id = '10000000-0000-0000-0000-000000000001'
 $query$);
+select pg_temp.assert_denied($query$
+  select public.submit_public_quote_request(
+    '20000000-0000-0000-0000-000000000001',
+    '{"firstName":"Unauthorized","lastName":"Caller","email":"unauthorized@example.test","phone":"2145550100"}',
+    '{"year":2024,"make":"Test","model":"Unauthorized","color":""}',
+    'tenant-a-service'
+  )
+$query$);
+select pg_temp.assert_denied($query$
+  select public.submit_public_booking_request(
+    '20000000-0000-0000-0000-000000000001',
+    '{"firstName":"Unauthorized","lastName":"Caller","email":"unauthorized@example.test","phone":"2145550100"}',
+    '{"year":2024,"make":"Test","model":"Unauthorized","color":""}',
+    'tenant-a-service',
+    current_date + 1,
+    '8:00 AM',
+    now() + interval '1 day',
+    ''
+  )
+$query$);
 
 select pg_temp.assert_denied($query$
   insert into public.services (business_id, slug, name)
@@ -230,6 +250,76 @@ begin
 end
 $$;
 
+set local role service_role;
+do $$
+declare
+  _appointment_date date := current_date + 1;
+  _appointment_time text;
+  _starts_at timestamptz;
+  _quote_result jsonb;
+  _booking_result jsonb;
+  _before_count integer;
+  _after_count integer;
+begin
+  while extract(isodow from _appointment_date) > 5 loop
+    _appointment_date := _appointment_date + 1;
+  end loop;
+  _appointment_time := case when extract(isodow from _appointment_date) = 6 then '10:00 AM' else '8:00 AM' end;
+  _starts_at := ((_appointment_date::text || ' ' || _appointment_time)::timestamp without time zone)
+    at time zone 'America/Chicago';
+
+  _quote_result := public.submit_public_quote_request(
+    '20000000-0000-0000-0000-000000000001',
+    '{"firstName":"Atomic","lastName":"Quote","email":"atomic-quote@example.test","phone":"2145550191"}',
+    '{"year":2024,"make":"Test","model":"Quote","color":"Black"}',
+    'tenant-a-service',
+    null,
+    null,
+    null,
+    ''
+  );
+  if not (_quote_result ? 'leadId') or not (_quote_result ? 'estimate') then
+    raise exception 'Atomic quote request returned an invalid result';
+  end if;
+
+  _booking_result := public.submit_public_booking_request(
+    '20000000-0000-0000-0000-000000000001',
+    '{"firstName":"Atomic","lastName":"Booking","email":"atomic-booking@example.test","phone":"2145550192"}',
+    '{"year":2024,"make":"Test","model":"Booking","color":"Blue"}',
+    'tenant-a-service',
+    _appointment_date,
+    _appointment_time,
+    _starts_at,
+    ''
+  );
+  if not (_booking_result ? 'appointmentId') or _booking_result->>'service' <> 'Tenant A Service' then
+    raise exception 'Atomic booking request returned an invalid result';
+  end if;
+
+  select count(*) into _before_count
+  from public.customers
+  where business_id = '20000000-0000-0000-0000-000000000001';
+  begin
+    perform public.submit_public_quote_request(
+      '20000000-0000-0000-0000-000000000001',
+      '{"firstName":"Atomic","lastName":"Rollback","email":"atomic-rollback@example.test","phone":"2145550193"}',
+      '{"year":"invalid","make":"Test","model":"Rollback","color":""}',
+      'tenant-a-service'
+    );
+    raise exception 'Invalid public quote unexpectedly succeeded';
+  exception when invalid_text_representation then
+    null;
+  end;
+  select count(*) into _after_count
+  from public.customers
+  where business_id = '20000000-0000-0000-0000-000000000001';
+  if _after_count <> _before_count then
+    raise exception 'Failed public quote left a partial customer record';
+  end if;
+end
+$$;
+
+reset role;
 do $$
 declare
   _suffix text := txid_current()::text;
@@ -268,6 +358,13 @@ begin
   insert into public.appointments (customer_id, vehicle_id, service_id, lead_id, starts_at)
   values (_customer, _vehicle, _service, _lead, now())
   returning id into _appointment;
+  begin
+    insert into public.appointments (customer_id, vehicle_id, service_id, lead_id, starts_at)
+    values (_customer, _vehicle, _service, _lead, now() + interval '30 minutes');
+    raise exception 'Overlapping appointment was permitted';
+  exception when exclusion_violation then
+    null;
+  end;
   update public.appointments set status = 'completed' where id = _appointment;
 
   delete from public.appointments where id = _appointment;

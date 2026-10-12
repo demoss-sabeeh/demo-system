@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Bot, Mail, MessageSquare, Send } from "lucide-react";
+import { ArrowLeft, Bot, Mail, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { PageTitle, RowsSkeleton, EmptyState, StatusBadge, inputSm } from "@/components/admin/ui";
+import { PageTitle, RowsSkeleton, EmptyState, StatusBadge } from "@/components/admin/ui";
 import { BookDialog, QuoteDialog, FollowUpDialog } from "@/components/admin/dialogs";
 import { useAppointments, useInvalidate, useLeads, useMessages, type Message } from "@/lib/admin-data";
 import { RowDelete } from "@/components/admin/delete";
-import { sendMessage, setLeadStatus, deleteMessage } from "@/lib/actions";
+import { setLeadStatus, deleteMessage } from "@/lib/actions";
 import { fmtDateTime, fmtTime, fullName, timeAgo, vehicleName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +22,6 @@ function Inbox() {
   const invalidate = useInvalidate();
   const [channel, setChannel] = useState<"" | "sms" | "email" | "ai">("");
   const [sel, setSel] = useState<string | null>(null);
-  const [body, setBody] = useState("");
   const [dlg, setDlg] = useState<null | "quote" | "book" | "fu">(null);
 
   const threads = useMemo(() => {
@@ -36,20 +35,9 @@ function Inbox() {
   const appt = appts.data?.find((a) => a.customer_id === sel && new Date(a.starts_at).getTime() > Date.now());
   const ctx = active ? { customer_id: active.cid, lead_id: lead?.id, vehicle_id: lead?.vehicle_id, service_id: lead?.service_id, customerName: fullName(active.last.customer) } : null;
 
-  async function send() {
-    if (!active || !body.trim()) return;
-    try {
-      await sendMessage({ customer_id: active.cid, lead_id: lead?.id, channel: active.last.channel === "email" ? "email" : "sms", body: body.trim() });
-      setBody("");
-      invalidate();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Send failed");
-    }
-  }
-
   return (
     <div className="space-y-5">
-      <PageTitle title="Messages" subtitle="SMS, email and AI assistant conversations in one inbox. Delivery is simulated in demo mode." />
+      <PageTitle title="Messages" subtitle="Message history and AI assistant conversations. SMS and email delivery are not configured." />
       <div className="grid grid-cols-[minmax(0,1fr)] overflow-hidden rounded-md border bg-surface lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)_260px]">
         <aside className={cn("min-w-0 border-r", active && "hidden lg:block")}>
           <div className="flex gap-1 border-b p-2">
@@ -89,10 +77,7 @@ function Inbox() {
                   </div>
                 ))}
               </div>
-              <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-2 border-t p-3">
-                <input aria-label="Reply" className={inputSm} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write a reply…" />
-                <Button type="submit" disabled={!body.trim()}><Send /> Send</Button>
-              </form>
+              <div className="border-t p-3 text-sm text-slate">Replies are unavailable until a verified SMS or email provider is configured.</div>
             </>
           )}
         </section>

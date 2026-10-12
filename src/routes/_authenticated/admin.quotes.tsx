@@ -30,7 +30,7 @@ function Quotes() {
 
   return (
     <div className="space-y-5">
-      <PageTitle title="Quotes" subtitle="Create, send and track every quote." />
+      <PageTitle title="Quotes" subtitle="Create and manage quote records. Sending quotes is unavailable until email delivery is configured." />
       <div className="flex flex-wrap gap-1.5">
         {["", ...QUOTE_STATUSES].map((s) => (
           <button key={s || "all"} onClick={() => setStatus(s)} className={cn("min-h-9 rounded border px-3 py-1 transition-colors text-xs font-semibold", status === s ? "border-navy bg-navy text-navy-foreground" : "bg-surface text-slate hover:text-navy")}>
@@ -75,7 +75,7 @@ function QuotePreview({ q, onDeleted }: { q: Quote; onDeleted: () => void }) {
     try {
       await setQuoteStatus(q, s);
       await invalidate();
-      toast.success(`Quote ${label(s).toLowerCase()}${s === "sent" ? " — delivery simulated" : ""}`);
+      toast.success(`Quote ${label(s).toLowerCase()}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Update failed");
     }
@@ -84,12 +84,13 @@ function QuotePreview({ q, onDeleted }: { q: Quote; onDeleted: () => void }) {
     <div className="space-y-5 pt-6">
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={() => setEdit(true)}><Pencil /> Edit</Button>
-        <Button size="sm" onClick={() => act("sent")} disabled={q.status === "accepted"}><Send /> Send</Button>
+        <Button size="sm" disabled title="Email delivery is not configured"><Send /> Delivery unavailable</Button>
         <Button size="sm" variant="outline" onClick={() => act("accepted")} disabled={q.status === "accepted"}><Check /> Accept</Button>
         <Button size="sm" variant="outline" onClick={() => act("declined")} disabled={q.status === "declined"}><X /> Decline</Button>
         {q.status === "accepted" && <Button size="sm" variant="navy" onClick={() => setBook(true)}><CalendarPlus /> Book appointment</Button>}
         <DeleteButton kind="Quote" name={`${q.number} · ${fullName(q.customer)}`} onConfirm={() => deleteQuote(q.id)} onDeleted={onDeleted} />
       </div>
+      <p className="text-xs text-slate">No quote email is sent from this workspace. Do not mark a quote as sent until you send it through a verified provider or manually.</p>
       <article className="rounded-md border bg-surface p-4 sm:p-6">
         <header className="grid min-w-0 gap-3 border-b pb-4 sm:grid-cols-[minmax(0,1fr)_auto]">
           <div className="min-w-0"><p className="text-sm font-extrabold tracking-[0.18em] text-navy">APEX AUTO DETAILING</p><p className="text-xs text-slate">{BUSINESS.address}</p></div>

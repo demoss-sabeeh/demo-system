@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { bookingDayBounds, isSlotWithinBusinessHours, validateBookingDate, validateBookingSlot } from "./booking-validation";
-import { createPublicCustomer, createPublicVehicle, serviceBySlug } from "./intake.server";
+import { serviceBySlug } from "./intake.server";
 import { knowledgeAsText, SERVICES, BUSINESS, TIME_SLOTS } from "./knowledge";
 
 function configuredPublicBusinessId(): string {
@@ -29,7 +29,8 @@ const quoteSchema = z.object({
   contact,
   vehicle,
   serviceSlug: z.string().max(60),
-  preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
+  preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal(""))
+    .refine((value) => !value || !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value, "Choose a valid preferred date."),
   preferredTime: z.string().max(30).optional(),
   condition: z.string().max(40).optional(),
   notes: z.string().max(1000).optional(),
@@ -40,45 +41,23 @@ export const submitQuoteRequest = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const businessId = configuredPublicBusinessId();
-    const svc = await serviceBySlug(db, businessId, data.serviceSlug);
-    const customerId = await createPublicCustomer(db, businessId, data.contact);
-    const vehicleId = await createPublicVehicle(db, businessId, customerId, data.vehicle);
-    const premium = ["BMW", "Porsche", "Mercedes", "Mercedes-AMG", "Audi", "Land Rover", "Range Rover", "Chevrolet"].some((m) => data.vehicle.make.toLowerCase().includes(m.toLowerCase()));
-    const estimate = svc.price_from + (premium ? 300 : 100);
-    const { data: lead, error } = await db
-      .from("leads")
-      .insert({
-        business_id: businessId,
-        customer_id: customerId,
-        vehicle_id: vehicleId,
-        service_id: svc.id,
-        source: "website",
-        status: "new",
-        estimated_value: estimate,
-        preferred_date: data.preferredDate || null,
-        preferred_time: data.preferredTime || null,
-        vehicle_condition: data.condition || null,
-        notes: data.notes ?? "",
-      })
-      .select("id")
-      .single();
-    if (error || !lead) throw new Error("We couldn't submit your request. Please try again.");
-    const { error: activityError } = await db.from("lead_activities").insert({
-      business_id: businessId,
-      lead_id: lead.id,
-      customer_id: customerId,
-      type: "inquiry",
-      title: "Website inquiry submitted",
-      detail: `Quote request for ${svc.name} on ${data.vehicle.year} ${data.vehicle.make} ${data.vehicle.model}`,
+    const { data: result, error } = await db.rpc("submit_public_quote_request", {
+      p_business_id: businessId,
+      p_contact: data.contact,
+      p_vehicle: data.vehicle,
+      p_service_slug: data.serviceSlug,
+      p_preferred_date: data.preferredDate || null,
+      p_preferred_time: data.preferredTime || null,
+      p_condition: data.condition || undefined,
+      p_notes: data.notes ?? "",
     });
-    if (activityError) throw new Error("We couldn't record your request activity.");
-    const { error: notificationError } = await db.from("notifications").insert({
-      business_id: businessId,
-      title: "New website inquiry",
-      body: `${data.contact.firstName} ${data.contact.lastName} requested ${svc.name}.`,
-    });
-    if (notificationError) throw new Error("We couldn't notify the business about your request.");
-    return { leadId: lead.id, service: svc.name, estimate };
+    if (error || !result) {
+      console.error("[Public intake] Quote request failed", error?.code ?? "empty result");
+      throw new Error("We couldn't submit your request. Please try again.");
+    }
+    const parsed = z.object({ leadId: z.string().uuid(), service: z.string(), estimate: z.number().int() }).safeParse(result);
+    if (!parsed.success) throw new Error("We couldn't submit your request. Please try again.");
+    return parsed.data;
   });
 
 export const getAvailability = createServerFn({ method: "GET" })
@@ -128,44 +107,24 @@ export const createBooking = createServerFn({ method: "POST" })
     const businessId = configuredPublicBusinessId();
     const svc = await serviceBySlug(db, businessId, data.serviceSlug);
     const startsAt = validateBookingSlot(data.date, data.time, svc.duration_hours);
-    const bounds = bookingDayBounds(data.date);
-    const { data: clash, error: clashError } = await db
-      .from("appointments")
-      .select("starts_at,duration_hours")
-      .eq("business_id", businessId)
-      .gte("starts_at", bounds.start)
-      .lt("starts_at", bounds.end)
-      .not("status", "in", "(cancelled,no_show)");
-    if (clashError) throw new Error("Could not verify appointment availability.");
-    const proposedStart = new Date(startsAt).getTime();
-    const proposedEnd = proposedStart + svc.duration_hours * 3_600_000;
-    const hasConflict = (clash ?? []).some((appointment) => {
-      const appointmentStart = new Date(appointment.starts_at).getTime();
-      const appointmentEnd = appointmentStart + appointment.duration_hours * 3_600_000;
-      return proposedStart < appointmentEnd && appointmentStart < proposedEnd;
+    const { data: result, error } = await db.rpc("submit_public_booking_request", {
+      p_business_id: businessId,
+      p_contact: data.contact,
+      p_vehicle: data.vehicle,
+      p_service_slug: data.serviceSlug,
+      p_date: data.date,
+      p_time: data.time,
+      p_starts_at: startsAt,
+      p_notes: data.notes ?? "",
     });
-    if (hasConflict) throw new Error("That time was just booked. Please choose another slot.");
-    const customerId = await createPublicCustomer(db, businessId, data.contact);
-    const vehicleId = await createPublicVehicle(db, businessId, customerId, data.vehicle);
-    const { data: lead, error: leadError } = await db
-      .from("leads")
-      .insert({ business_id: businessId, customer_id: customerId, vehicle_id: vehicleId, service_id: svc.id, source: "website", status: "new", estimated_value: svc.price_from, preferred_date: data.date, preferred_time: data.time, notes: data.notes ?? "" })
-      .select("id")
-      .single();
-    if (leadError || !lead) throw new Error("We couldn't save your booking request. Please try again.");
-    const { data: appt, error } = await db
-      .from("appointments")
-      .insert({ business_id: businessId, customer_id: customerId, vehicle_id: vehicleId, service_id: svc.id, lead_id: lead.id, starts_at: startsAt, duration_hours: svc.duration_hours, status: "requested", notes: data.notes ?? "" })
-      .select("id, location")
-      .single();
-    if (error || !appt) throw new Error("We couldn't confirm your appointment. Please try again.");
-    const { error: activitiesError } = await db.from("lead_activities").insert([
-      { business_id: businessId, lead_id: lead.id, customer_id: customerId, type: "inquiry", title: "Online appointment request submitted", detail: `${svc.name} requested for ${data.date} at ${data.time}` },
-    ]);
-    if (activitiesError) throw new Error("We couldn't record booking activity.");
-    const { error: notificationError } = await db.from("notifications").insert({ business_id: businessId, title: "New appointment request", body: `${data.contact.firstName} ${data.contact.lastName} requested ${svc.name} for ${data.date} at ${data.time}.` });
-    if (notificationError) throw new Error("Could not notify the business about the booking.");
-    return { appointmentId: appt.id, location: appt.location, service: svc.name };
+    if (error || !result) {
+      if (error?.message.includes("just booked")) throw new Error("That time was just booked. Please choose another slot.");
+      console.error("[Public intake] Appointment request failed", error?.code ?? "empty result");
+      throw new Error("We couldn't submit your appointment request. Please try again.");
+    }
+    const parsed = z.object({ appointmentId: z.string().uuid(), location: z.string(), service: z.string() }).safeParse(result);
+    if (!parsed.success) throw new Error("We couldn't submit your appointment request. Please try again.");
+    return parsed.data;
   });
 
 // ---------------- AI assistant ----------------

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { inputSm, selectCls } from "./ui";
-import { bookAppointment, createFollowUp, createQuote, sendMessage, updateQuote } from "@/lib/actions";
+import { bookAppointment, createFollowUp, createQuote, updateQuote } from "@/lib/actions";
 import { useInvalidate, useServices, type Quote } from "@/lib/admin-data";
 import { FU_TYPES, localToIso, money } from "@/lib/format";
 import { TIME_SLOTS } from "@/lib/knowledge";
@@ -69,7 +69,7 @@ export function BookDialog({ open, onOpenChange, ctx }: { open: boolean; onOpenC
         <div><L htmlFor="b-date">Date</L><input id="b-date" type="date" className={inputSm} value={date} onChange={(e) => setDate(e.target.value)} /></div>
         <div><L htmlFor="b-time">Time</L><select id="b-time" className={`${selectCls} w-full`} value={time} onChange={(e) => setTime(e.target.value)}>{TIME_SLOTS.map((t) => <option key={t}>{t}</option>)}</select></div>
       </div>
-      <p className="text-xs text-slate">Confirmation SMS and a 24-hour reminder are created automatically.</p>
+      <p className="text-xs text-slate">This records the appointment in the workspace. Customer confirmation and reminders are not sent automatically.</p>
     </Shell>
   );
 }
@@ -88,18 +88,19 @@ export function QuoteDialog({ open, onOpenChange, ctx, quote }: { open: boolean;
   const subtotal = list.reduce((a, i) => a + i.quantity * i.unit_price, 0);
   const valid = list.every((i) => i.description.trim() && i.quantity > 0);
 
-  function save(status: string) {
+  function save() {
     const clean = list.filter((i) => i.description.trim());
-    if (quote) return run(() => updateQuote(quote.id, { discount, notes, status }, clean), "Quote updated");
-    return run(() => createQuote({ ...ctx!, service_id: ctx!.service_id ?? svcDefault?.id, items: clean, discount, notes, status }), status === "sent" ? "Quote created and sent" : "Draft saved");
+    if (quote) return run(() => updateQuote(quote.id, { discount, notes }, clean), "Quote updated");
+    return run(() => createQuote({ ...ctx!, service_id: ctx!.service_id ?? svcDefault?.id, items: clean, discount, notes, status: "draft" }), "Draft saved");
   }
 
   return (
     <Shell open={open} onOpenChange={onOpenChange} title={quote ? `Edit ${quote.number}` : "Create quote"} desc={ctx?.customerName}
       footer={<>
-        <Button variant="outline" disabled={busy || !valid} onClick={() => save(quote?.status ?? "draft")}>Save {quote ? "" : "draft"}</Button>
-        <Button disabled={busy || !valid} onClick={() => save("sent")}>{busy && <Loader2 className="animate-spin" />}Save & send</Button>
+        <Button variant="outline" disabled={busy || !valid} onClick={save}>Save {quote ? "" : "draft"}</Button>
+        <Button disabled>Quote delivery unavailable</Button>
       </>}>
+      <p className="text-xs text-slate">Save a draft here. Quote delivery is not connected, so this app cannot email or text the customer.</p>
       <div className="space-y-2">
         <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate">Line items</p>
         {list.map((it, i) => (
@@ -124,12 +125,12 @@ export function QuoteDialog({ open, onOpenChange, ctx, quote }: { open: boolean;
 export function MessageDialog({ open, onOpenChange, ctx }: { open: boolean; onOpenChange: (o: boolean) => void; ctx: Ctx }) {
   const [body, setBody] = useState("");
   const [channel, setChannel] = useState<"sms" | "email">("sms");
-  const { busy, run } = useRun(() => { setBody(""); onOpenChange(false); });
   return (
-    <Shell open={open} onOpenChange={onOpenChange} title="Send message" desc={`${ctx.customerName ?? ""} · delivery is simulated in demo mode`}
-      footer={<Button disabled={busy || !body.trim()} onClick={() => run(() => sendMessage({ customer_id: ctx.customer_id, lead_id: ctx.lead_id, channel, body: body.trim() }), "Message sent")}>Send</Button>}>
+    <Shell open={open} onOpenChange={onOpenChange} title="Send message" desc={`${ctx.customerName ?? ""} · SMS/email delivery is not configured`}
+      footer={<Button disabled>Delivery unavailable</Button>}>
       <div className="flex gap-2">{(["sms", "email"] as const).map((c) => <Button key={c} size="sm" variant={channel === c ? "navy" : "outline"} onClick={() => setChannel(c)}>{c.toUpperCase()}</Button>)}</div>
       <textarea aria-label="Message" rows={4} maxLength={600} className={`${inputSm} h-auto py-2`} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Type your message…" />
+      <p className="text-xs text-slate">No message will be sent or recorded. Connect and verify a delivery provider before contacting customers.</p>
     </Shell>
   );
 }

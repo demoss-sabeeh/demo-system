@@ -5,11 +5,15 @@ import { describe, expect, it } from "vitest";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const migration = readFileSync(path.join(root, "drizzle/migrations/0003_business_data_isolation.sql"), "utf8");
+const intakeMigration = readFileSync(path.join(root, "drizzle/migrations/0004_atomic_public_intake.sql"), "utf8");
 const policyTest = readFileSync(path.join(root, "drizzle/tests/0003_business_data_isolation.sql"), "utf8");
 const publicFunctions = readFileSync(path.join(root, "src/lib/public.functions.ts"), "utf8");
 const intake = readFileSync(path.join(root, "src/lib/intake.server.ts"), "utf8");
 const adminRoute = readFileSync(path.join(root, "src/routes/_authenticated/admin.tsx"), "utf8");
 const automationsRoute = readFileSync(path.join(root, "src/routes/_authenticated/admin.automations.tsx"), "utf8");
+const quoteRoute = readFileSync(path.join(root, "src/routes/quote.tsx"), "utf8");
+const viteConfig = readFileSync(path.join(root, "vite.config.ts"), "utf8");
+const packageJson = readFileSync(path.join(root, "package.json"), "utf8");
 
 const businessTables = [
   "services",
@@ -77,8 +81,24 @@ describe("business data isolation", () => {
     expect(automationsRoute).not.toContain("RunDemoButton");
     expect(publicFunctions).not.toContain("runInstantResponse");
     expect(publicFunctions).not.toMatch(/\.from\("messages"\)\.insert/);
-    expect(publicFunctions).toContain('status: "requested"');
-    expect(publicFunctions).toContain('title: "New appointment request"');
+    expect(intakeMigration).toContain("'requested'");
+    expect(intakeMigration).toContain("'New appointment request'");
+    expect(quoteRoute).not.toContain("instant confirmation by text");
+  });
+
+  it("routes public writes through atomic server-role-only database functions", () => {
+    expect(publicFunctions).toContain('db.rpc("submit_public_quote_request"');
+    expect(publicFunctions).toContain('db.rpc("submit_public_booking_request"');
+    expect(publicFunctions).not.toMatch(/\.from\("(customers|vehicles|leads|appointments|notifications|lead_activities)"\)\s*\.insert/);
+    expect(intakeMigration).toContain("pg_advisory_xact_lock");
+    expect(intakeMigration).toContain("appointments_prevent_overlap");
+    expect(intakeMigration).toContain("set search_path = pg_catalog, public");
+    expect(intakeMigration).toMatch(/revoke all privileges on function public\.submit_public_quote_request[\s\S]*from public, anon, authenticated/i);
+    expect(intakeMigration).toMatch(/revoke all privileges on function public\.submit_public_booking_request[\s\S]*from public, anon, authenticated/i);
+    expect(intakeMigration).toMatch(/grant execute on function public\.submit_public_quote_request[\s\S]*to service_role/i);
+    expect(intakeMigration).toMatch(/grant execute on function public\.submit_public_booking_request[\s\S]*to service_role/i);
+    expect(policyTest).toContain("Failed public quote left a partial customer record");
+    expect(policyTest).toContain("Overlapping appointment was permitted");
   });
 
   it("provides disposable-database tests for negative operations on all owned tables", () => {
@@ -89,11 +109,16 @@ describe("business data isolation", () => {
     expect(policyTest).toContain("Cross-business UPDATE was permitted");
     expect(policyTest).toContain("Cross-business DELETE affected rows");
     expect(policyTest).toContain("Business or membership SELECT isolation failed");
-    expect(policyTest.match(/assert_denied\(\$query\$/g)).toHaveLength(businessTables.length + 6);
+    expect(policyTest.match(/assert_denied\(\$query\$/g)).toHaveLength(businessTables.length + 8);
     expect(policyTest).toContain("Cross-business relationship was permitted");
     expect(policyTest).toContain("CRUD service");
     expect(policyTest).toContain("update public.quotes set status = 'sent'");
     expect(policyTest).toContain("delete from public.appointments where id = _appointment");
     expect(policyTest.trimEnd().endsWith("rollback;")).toBe(true);
+  });
+
+  it("targets Nitro's Vercel preset and supported Node 24 runtime", () => {
+    expect(viteConfig).toContain('preset: "vercel"');
+    expect(packageJson).toContain('"node": ">=24.0 <25"');
   });
 });
