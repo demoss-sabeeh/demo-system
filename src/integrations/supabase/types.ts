@@ -6,24 +6,6 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-type AddBusinessId<T> = T extends {
-  Row: infer Row;
-  Insert: infer Insert;
-  Update: infer Update;
-}
-  ? "business_id" extends keyof Row
-    ? T
-    : Omit<T, "Row" | "Insert" | "Update"> & {
-        Row: Row & { business_id: string | null };
-        Insert: Insert & { business_id?: string | null };
-        Update: Update & { business_id?: string | null };
-      }
-  : T;
-
-type AddBusinessIds<T> = {
-  [K in keyof T]: K extends "businesses" ? T[K] : AddBusinessId<T[K]>
-};
-
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -31,7 +13,7 @@ export type Database = {
     PostgrestVersion: "14.18"
   }
   public: {
-    Tables: AddBusinessIds<{
+    Tables: {
       appointments: {
         Row: {
           created_at: string
@@ -74,32 +56,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "appointments_business_customer_fkey"
-            columns: ["business_id", "customer_id"]
+            foreignKeyName: "appointments_customer_id_fkey"
+            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "appointments_business_lead_fkey"
-            columns: ["business_id", "lead_id"]
+            foreignKeyName: "appointments_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "appointments_business_service_fkey"
-            columns: ["business_id", "service_id"]
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "appointments_business_vehicle_fkey"
-            columns: ["business_id", "vehicle_id"]
+            foreignKeyName: "appointments_vehicle_id_fkey"
+            columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -133,25 +115,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "automation_runs_business_automation_fkey"
-            columns: ["business_id", "automation_id"]
+            foreignKeyName: "automation_runs_automation_id_fkey"
+            columns: ["automation_id"]
             isOneToOne: false
             referencedRelation: "automations"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "automation_runs_business_customer_fkey"
-            columns: ["business_id", "customer_id"]
+            foreignKeyName: "automation_runs_customer_id_fkey"
+            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "automation_runs_business_lead_fkey"
-            columns: ["business_id", "lead_id"]
+            foreignKeyName: "automation_runs_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -193,56 +175,6 @@ export type Database = {
           trigger?: string
         }
         Relationships: []
-      }
-      businesses: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          public_catalog: boolean
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          public_catalog?: boolean
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          public_catalog?: boolean
-        }
-        Relationships: []
-      }
-      business_members: {
-        Row: {
-          business_id: string
-          created_at: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          business_id: string
-          created_at?: string
-          role?: string
-          user_id: string
-        }
-        Update: {
-          business_id?: string
-          created_at?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_members_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       customers: {
         Row: {
@@ -316,25 +248,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "follow_ups_business_customer_fkey"
-            columns: ["business_id", "customer_id"]
+            foreignKeyName: "follow_ups_customer_id_fkey"
+            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "follow_ups_business_lead_fkey"
-            columns: ["business_id", "lead_id"]
+            foreignKeyName: "follow_ups_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "follow_ups_business_vehicle_fkey"
-            columns: ["business_id", "vehicle_id"]
+            foreignKeyName: "follow_ups_vehicle_id_fkey"
+            columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -368,18 +300,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "lead_activities_business_customer_fkey"
-            columns: ["business_id", "customer_id"]
+            foreignKeyName: "lead_activities_customer_id_fkey"
+            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lead_activities_business_lead_fkey"
-            columns: ["business_id", "lead_id"]
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -431,25 +363,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "leads_business_customer_fkey"
-            columns: ["business_id", "customer_id"]
+            foreignKeyName: "leads_customer_id_fkey"
+            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "leads_business_service_fkey"
-            columns: ["business_id", "service_id"]
+            foreignKeyName: "leads_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "leads_business_vehicle_fkey"
-            columns: ["business_id", "vehicle_id"]
+            foreignKeyName: "leads_vehicle_id_fkey"
+            columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -486,18 +418,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "messages_business_customer_fkey"
-            columns: ["business_id", "customer_id"]
+            foreignKeyName: "messages_customer_id_fkey"
+            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "messages_business_lead_fkey"
-            columns: ["business_id", "lead_id"]
+            foreignKeyName: "messages_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -552,11 +484,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "quote_items_business_quote_fkey"
-            columns: ["business_id", "quote_id"]
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
             isOneToOne: false
             referencedRelation: "quotes"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -602,32 +534,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "quotes_business_customer_fkey"
-            columns: ["business_id", "customer_id"]
+            foreignKeyName: "quotes_customer_id_fkey"
+            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "quotes_business_lead_fkey"
-            columns: ["business_id", "lead_id"]
+            foreignKeyName: "quotes_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "quotes_business_service_fkey"
-            columns: ["business_id", "service_id"]
+            foreignKeyName: "quotes_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "quotes_business_vehicle_fkey"
-            columns: ["business_id", "vehicle_id"]
+            foreignKeyName: "quotes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -712,26 +644,24 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "vehicles_business_customer_fkey"
-            columns: ["business_id", "customer_id"]
+            foreignKeyName: "vehicles_customer_id_fkey"
+            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["business_id", "id"]
+            referencedColumns: ["id"]
           },
         ]
       }
-    }>
+    }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      current_business_id: { Args: never; Returns: string }
       delete_customer: { Args: { _id: string }; Returns: undefined }
       delete_lead: { Args: { _id: string }; Returns: undefined }
       delete_service: { Args: { _id: string }; Returns: undefined }
       delete_vehicle: { Args: { _id: string }; Returns: undefined }
-      is_business_member: { Args: { _business_id: string }; Returns: boolean }
-      is_business_public: { Args: { _business_id: string }; Returns: boolean }
+      reset_demo: { Args: never; Returns: undefined }
       seed_demo: { Args: never; Returns: undefined }
     }
     Enums: {
