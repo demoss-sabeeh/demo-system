@@ -47,7 +47,7 @@ export async function findOrCreateVehicle(db: DB, customerId: string, v: Vehicle
 }
 
 export async function serviceBySlug(db: DB, slug: string) {
-  const { data } = await db.from("services").select("id,name,price_from,duration_hours").eq("slug", slug).maybeSingle();
+  const { data } = await db.from("services").select("id,name,price_from,duration_hours").eq("slug", slug).eq("active", true).maybeSingle();
   if (!data) throw new Error("Unknown service.");
   return data;
 }

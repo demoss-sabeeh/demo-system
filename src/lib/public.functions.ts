@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { bookingDayBounds, businessLocalToIso, isSlotWithinBusinessHours, validateBookingDate, validateBookingSlot } from "./booking-validation";
-import { createPublicCustomer, createPublicVehicle, serviceBySlug } from "./intake.server";
+import { findOrCreateCustomer, findOrCreateVehicle, runInstantResponse, serviceBySlug } from "./intake.server";
 import { knowledgeAsText, SERVICES, BUSINESS, TIME_SLOTS, ADDONS, addonBySlug } from "./knowledge";
 
 const contact = z.object({
@@ -32,8 +32,8 @@ export const submitQuoteRequest = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const svc = await serviceBySlug(db, data.serviceSlug);
-    const customerId = await createPublicCustomer(db, data.contact);
-    const vehicleId = await createPublicVehicle(db, customerId, data.vehicle);
+    const customerId = await findOrCreateCustomer(db, data.contact);
+    const vehicleId = await findOrCreateVehicle(db, customerId, data.vehicle);
     const premium = ["BMW", "Porsche", "Mercedes", "Mercedes-AMG", "Audi", "Land Rover", "Range Rover", "Chevrolet"].some((m) => data.vehicle.make.toLowerCase().includes(m.toLowerCase()));
     const estimate = svc.price_from + (premium ? 300 : 100);
     const { data: lead, error } = await db
@@ -66,6 +66,7 @@ export const submitQuoteRequest = createServerFn({ method: "POST" })
       body: `${data.contact.firstName} ${data.contact.lastName} requested ${svc.name}.`,
     });
     if (notificationError) throw new Error("We couldn't notify the business about your request.");
+    await runInstantResponse(db, { leadId: lead.id, customerId, firstName: data.contact.firstName.trim(), serviceName: svc.name });
     return { leadId: lead.id, service: svc.name, estimate };
   });
 
@@ -145,8 +146,8 @@ export const createBooking = createServerFn({ method: "POST" })
     const proposedStart = new Date(startsAt).getTime();
     const ranges = await bookedRanges(db, data.date);
     if (overlaps(ranges, proposedStart, proposedStart + cart.durationHours * 3_600_000)) throw new Error("That time was just booked. Please choose another slot.");
-    const customerId = await createPublicCustomer(db, data.contact);
-    const vehicleId = await createPublicVehicle(db, customerId, data.vehicle);
+    const customerId = await findOrCreateCustomer(db, data.contact);
+    const vehicleId = await findOrCreateVehicle(db, customerId, data.vehicle);
     const notes = [`Requested: ${cart.label}`, data.notes?.trim()].filter(Boolean).join("\n");
     const { data: lead, error: leadError } = await db
       .from("leads")
