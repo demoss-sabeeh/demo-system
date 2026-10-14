@@ -15,27 +15,6 @@
       "when": 1791502048368,
       "tag": "0001_delete_record_functions",
       "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1791817144000,
-      "tag": "0002_contain_demo_reset",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1791821304652,
-      "tag": "0003_business_data_isolation",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1791841581408,
-      "tag": "0004_atomic_public_intake",
-      "breakpoints": true
     }
   ]
 }

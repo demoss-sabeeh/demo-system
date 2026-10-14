@@ -2,9 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Zap, Filter, Play, Clock } from "lucide-react";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { PageTitle, Panel, RowsSkeleton, StatusBadge } from "@/components/admin/ui";
-import { useAutomationRuns, useAutomations, type Automation } from "@/lib/admin-data";
+import { RunDemoButton } from "@/components/admin/RunDemo";
+import { useAutomationRuns, useAutomations, useInvalidate, type Automation } from "@/lib/admin-data";
+import { supabase } from "@/integrations/supabase/client";
 import { fullName, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -39,13 +42,21 @@ function Flow({ a }: { a: Automation }) {
 function Automations() {
   const autos = useAutomations();
   const runs = useAutomationRuns();
+  const invalidate = useInvalidate();
   const [sel, setSel] = useState<string | null>(null);
   const current = autos.data?.find((a) => a.id === sel) ?? autos.data?.[0];
 
+  async function toggle(a: Automation) {
+    const status = a.status === "active" ? "paused" : "active";
+    const { error } = await supabase.from("automations").update({ status }).eq("id", a.id);
+    if (error) return toast.error(error.message);
+    toast.success(`${a.name} ${status}`);
+    invalidate();
+  }
+
   return (
     <div className="space-y-5">
-      <PageTitle title="Automation Center" subtitle="Workflow definitions are display-only; no background worker executes them." />
-      <p className="rounded-md border border-warning/30 bg-warning-soft p-3 text-sm text-warning">Do not rely on these definitions for customer messages, reminders, or follow-ups. Automated execution is not configured.</p>
+      <PageTitle title="Automation Center" subtitle="The workflows running your customer journey in the background." actions={<RunDemoButton />} />
       {autos.isLoading ? <RowsSkeleton /> : (
         <div className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
           <ul className="space-y-2">
@@ -57,7 +68,7 @@ function Automations() {
                     <p className="mt-1 text-sm text-slate">{a.description}</p>
                     <p className="mt-2 text-xs text-slate"><span className="font-semibold text-navy">When</span> {a.trigger}{a.delay ? ` · after ${a.delay}` : ""} → {a.actions.join(", ")}</p>
                   </button>
-                  <Switch checked={a.status === "active"} disabled aria-label={`${a.name} status (read only)`} />
+                  <Switch checked={a.status === "active"} onCheckedChange={() => toggle(a)} aria-label={`Toggle ${a.name}`} />
                 </div>
               </li>
             ))}

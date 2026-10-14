@@ -89,7 +89,7 @@ function QuotePage() {
         <aside className="lg:col-span-4">
           <p className="eyebrow text-primary">Request a quote</p>
           <h1 className="mt-3 font-display text-5xl leading-none text-navy">Tell us about your vehicle.</h1>
-          <p className="mt-4 text-slate">Share a few details and our team will review your vehicle and follow up using the contact information you provide.</p>
+          <p className="mt-4 text-slate">You'll receive an instant confirmation by text, followed by a personal recommendation from our team.</p>
           {svc && !done && (
             <div className="mt-8 hidden rounded-md border bg-surface p-5 lg:block">
               <p className="eyebrow text-slate">Selected</p>
@@ -103,7 +103,7 @@ function QuotePage() {
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-md border bg-surface p-8 md:p-12">
               <CheckCircle2 className="h-10 w-10 text-success" />
               <h2 className="mt-5 break-words font-display text-4xl text-navy sm:text-5xl">Request received, {f.firstName}.</h2>
-              <p className="mt-4 max-w-lg text-slate">Your request has been recorded. No text or email confirmation was sent. A specialist will review your {f.year} {f.make} {f.model} and follow up using the contact details you provided.</p>
+              <p className="mt-4 max-w-lg text-slate">We've sent a confirmation to {f.phone}. A specialist will review your {f.year} {f.make} {f.model} and follow up with a {done.service} recommendation.</p>
               <div className="mt-6 max-w-md"><Summary rows={[["Service", done.service], ["Estimated starting value", money(done.estimate)], ["Preferred", [f.date, f.time].filter(Boolean).join(" · ")]]} /></div>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button asChild variant="cta" size="lg"><Link to="/book" search={{ service: f.service }}>Book a time now</Link></Button>

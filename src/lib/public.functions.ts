@@ -1,16 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { bookingDayBounds, isSlotWithinBusinessHours, validateBookingDate, validateBookingSlot } from "./booking-validation";
-import { serviceBySlug } from "./intake.server";
-import { knowledgeAsText, SERVICES, BUSINESS, TIME_SLOTS } from "./knowledge";
-
-function configuredPublicBusinessId(): string {
-  const businessId = process.env["OPERANTSCALE_PUBLIC_BUSINESS_ID"];
-  if (!businessId || !z.string().uuid().safeParse(businessId).success) {
-    throw new Error("Public business is not configured.");
-  }
-  return businessId;
-}
+import { bookingDayBounds, businessLocalToIso, isSlotWithinBusinessHours, validateBookingDate, validateBookingSlot } from "./booking-validation";
+import { findOrCreateCustomer, findOrCreateVehicle, runInstantResponse, serviceBySlug } from "./intake.server";
+import { knowledgeAsText, SERVICES, BUSINESS, TIME_SLOTS, ADDONS, addonBySlug } from "./knowledge";
 
 const contact = z.object({
   firstName: z.string().trim().min(1).max(60),
@@ -29,8 +21,7 @@ const quoteSchema = z.object({
   contact,
   vehicle,
   serviceSlug: z.string().max(60),
-  preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal(""))
-    .refine((value) => !value || !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value, "Choose a valid preferred date."),
+  preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
   preferredTime: z.string().max(30).optional(),
   condition: z.string().max(40).optional(),
   notes: z.string().max(1000).optional(),
@@ -40,62 +31,108 @@ export const submitQuoteRequest = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => quoteSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const businessId = configuredPublicBusinessId();
-    const { data: result, error } = await db.rpc("submit_public_quote_request", {
-      p_business_id: businessId,
-      p_contact: data.contact,
-      p_vehicle: data.vehicle,
-      p_service_slug: data.serviceSlug,
-      p_preferred_date: data.preferredDate || null,
-      p_preferred_time: data.preferredTime || null,
-      p_condition: data.condition || undefined,
-      p_notes: data.notes ?? "",
+    const svc = await serviceBySlug(db, data.serviceSlug);
+    const customerId = await findOrCreateCustomer(db, data.contact);
+    const vehicleId = await findOrCreateVehicle(db, customerId, data.vehicle);
+    const premium = ["BMW", "Porsche", "Mercedes", "Mercedes-AMG", "Audi", "Land Rover", "Range Rover", "Chevrolet"].some((m) => data.vehicle.make.toLowerCase().includes(m.toLowerCase()));
+    const estimate = svc.price_from + (premium ? 300 : 100);
+    const { data: lead, error } = await db
+      .from("leads")
+      .insert({
+        customer_id: customerId,
+        vehicle_id: vehicleId,
+        service_id: svc.id,
+        source: "website",
+        status: "new",
+        estimated_value: estimate,
+        preferred_date: data.preferredDate || null,
+        preferred_time: data.preferredTime || null,
+        vehicle_condition: data.condition || null,
+        notes: data.notes ?? "",
+      })
+      .select("id")
+      .single();
+    if (error || !lead) throw new Error("We couldn't submit your request. Please try again.");
+    const { error: activityError } = await db.from("lead_activities").insert({
+      lead_id: lead.id,
+      customer_id: customerId,
+      type: "inquiry",
+      title: "Website inquiry submitted",
+      detail: `Quote request for ${svc.name} on ${data.vehicle.year} ${data.vehicle.make} ${data.vehicle.model}`,
     });
-    if (error || !result) {
-      console.error("[Public intake] Quote request failed", error?.code ?? "empty result");
-      throw new Error("We couldn't submit your request. Please try again.");
-    }
-    const parsed = z.object({ leadId: z.string().uuid(), service: z.string(), estimate: z.number().int() }).safeParse(result);
-    if (!parsed.success) throw new Error("We couldn't submit your request. Please try again.");
-    return parsed.data;
+    if (activityError) throw new Error("We couldn't record your request activity.");
+    const { error: notificationError } = await db.from("notifications").insert({
+      title: "New website inquiry",
+      body: `${data.contact.firstName} ${data.contact.lastName} requested ${svc.name}.`,
+    });
+    if (notificationError) throw new Error("We couldn't notify the business about your request.");
+    await runInstantResponse(db, { leadId: lead.id, customerId, firstName: data.contact.firstName.trim(), serviceName: svc.name });
+    return { leadId: lead.id, service: svc.name, estimate };
   });
 
+// A booking is one or more services plus optional add-ons, done in one visit.
+const cartSchema = {
+  serviceSlugs: z.array(z.string().max(60)).min(1, "Choose at least one service").max(4).optional(),
+  serviceSlug: z.string().max(60).optional(),
+  addonSlugs: z.array(z.string().max(60)).max(ADDONS.length).default([]),
+};
+
+type DBClient = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
+
+async function resolveCart(db: DBClient, input: { serviceSlugs?: string[]; serviceSlug?: string; addonSlugs: string[] }) {
+  const slugs = [...new Set(input.serviceSlugs?.length ? input.serviceSlugs : input.serviceSlug ? [input.serviceSlug] : [])];
+  if (!slugs.length) throw new Error("Choose at least one service.");
+  const services = await Promise.all(slugs.map((slug) => serviceBySlug(db, slug)));
+  const addons = [...new Set(input.addonSlugs)].map((slug) => {
+    const a = addonBySlug(slug);
+    if (!a) throw new Error("Unknown add-on.");
+    return a;
+  });
+  const durationHours = services.reduce((t, s) => t + Number(s.duration_hours), 0) + addons.reduce((t, a) => t + a.durationHours, 0);
+  const price = services.reduce((t, s) => t + s.price_from, 0) + addons.reduce((t, a) => t + a.price, 0);
+  const label = [services.map((s) => s.name).join(" + "), addons.length ? `add-ons: ${addons.map((a) => a.name).join(", ")}` : ""].filter(Boolean).join("; ");
+  return { primary: services[0], services, addons, durationHours, price, label };
+}
+
+async function bookedRanges(db: DBClient, date: string) {
+  const bounds = bookingDayBounds(date);
+  const { data: rows, error } = await db
+    .from("appointments")
+    .select("starts_at,duration_hours")
+    .gte("starts_at", bounds.start)
+    .lt("starts_at", bounds.end)
+    .not("status", "in", "(cancelled,no_show)");
+  if (error) throw new Error("Could not load appointment availability.");
+  return (rows ?? []).map((r) => {
+    const start = new Date(r.starts_at).getTime();
+    return [start, start + Number(r.duration_hours) * 3_600_000] as const;
+  });
+}
+
+const overlaps = (ranges: (readonly [number, number])[], start: number, end: number) => ranges.some(([s, e]) => start < e && s < end);
+
 export const getAvailability = createServerFn({ method: "GET" })
-  .inputValidator((d: unknown) => z.object({ date: z.string(), serviceSlug: z.string().max(60) }).parse(d))
+  .inputValidator((d: unknown) => z.object({ date: z.string().max(10), ...cartSchema }).parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const businessId = configuredPublicBusinessId();
     const weekday = validateBookingDate(data.date);
-    if (weekday === 0) return { slots: [] as { time: string; available: boolean }[], closed: true };
-    const svc = await serviceBySlug(db, businessId, data.serviceSlug);
-    const bounds = bookingDayBounds(data.date);
-    const { data: rows, error } = await db
-      .from("appointments")
-      .select("starts_at,duration_hours")
-      .eq("business_id", businessId)
-      .gte("starts_at", bounds.start)
-      .lt("starts_at", bounds.end)
-      .not("status", "in", "(cancelled,no_show)");
-    if (error) throw new Error("Could not load appointment availability.");
+    if (weekday === 0) return { slots: [] as { time: string; available: boolean }[], closed: true, durationHours: 0 };
+    const cart = await resolveCart(db, data);
+    const ranges = await bookedRanges(db, data.date);
+    const now = Date.now();
     const slots = (weekday === 6 ? TIME_SLOTS.slice(1, 3) : TIME_SLOTS).map((time) => {
-      if (!isSlotWithinBusinessHours(data.date, time, svc.duration_hours)) return { time, available: false };
-      const start = new Date(validateBookingSlot(data.date, time, svc.duration_hours));
-      const end = start.getTime() + svc.duration_hours * 3_600_000;
-      const overlaps = (rows ?? []).some((appointment) => {
-        const appointmentStart = new Date(appointment.starts_at).getTime();
-        const appointmentEnd = appointmentStart + appointment.duration_hours * 3_600_000;
-        return start.getTime() < appointmentEnd && appointmentStart < end;
-      });
-      return { time, available: !overlaps };
+      if (!isSlotWithinBusinessHours(data.date, time, cart.durationHours)) return { time, available: false };
+      const start = new Date(businessLocalToIso(data.date, time)).getTime();
+      return { time, available: start > now && !overlaps(ranges, start, start + cart.durationHours * 3_600_000) };
     });
-    return { slots, closed: false };
+    return { slots, closed: false, durationHours: cart.durationHours };
   });
 
 const bookingSchema = z.object({
   contact,
   vehicle,
-  serviceSlug: z.string().max(60),
-  date: z.string(),
+  ...cartSchema,
+  date: z.string().max(10),
   time: z.string().max(20),
   notes: z.string().max(1000).optional(),
 });
@@ -104,27 +141,34 @@ export const createBooking = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => bookingSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const businessId = configuredPublicBusinessId();
-    const svc = await serviceBySlug(db, businessId, data.serviceSlug);
-    const startsAt = validateBookingSlot(data.date, data.time, svc.duration_hours);
-    const { data: result, error } = await db.rpc("submit_public_booking_request", {
-      p_business_id: businessId,
-      p_contact: data.contact,
-      p_vehicle: data.vehicle,
-      p_service_slug: data.serviceSlug,
-      p_date: data.date,
-      p_time: data.time,
-      p_starts_at: startsAt,
-      p_notes: data.notes ?? "",
-    });
-    if (error || !result) {
-      if (error?.message.includes("just booked")) throw new Error("That time was just booked. Please choose another slot.");
-      console.error("[Public intake] Appointment request failed", error?.code ?? "empty result");
-      throw new Error("We couldn't submit your appointment request. Please try again.");
+    const cart = await resolveCart(db, data);
+    const startsAt = validateBookingSlot(data.date, data.time, cart.durationHours);
+    const proposedStart = new Date(startsAt).getTime();
+    const ranges = await bookedRanges(db, data.date);
+    if (overlaps(ranges, proposedStart, proposedStart + cart.durationHours * 3_600_000)) throw new Error("That time was just booked. Please choose another slot.");
+    const customerId = await findOrCreateCustomer(db, data.contact);
+    const vehicleId = await findOrCreateVehicle(db, customerId, data.vehicle);
+    const notes = [`Requested: ${cart.label}`, data.notes?.trim()].filter(Boolean).join("\n");
+    const { data: lead, error: leadError } = await db
+      .from("leads")
+      .insert({ customer_id: customerId, vehicle_id: vehicleId, service_id: cart.primary.id, source: "website", status: "new", estimated_value: cart.price, preferred_date: data.date, preferred_time: data.time, notes })
+      .select("id")
+      .single();
+    if (leadError || !lead) throw new Error("We couldn't save your booking request. Please try again.");
+    const { data: appt, error } = await db
+      .from("appointments")
+      .insert({ customer_id: customerId, vehicle_id: vehicleId, service_id: cart.primary.id, lead_id: lead.id, starts_at: startsAt, duration_hours: cart.durationHours, status: "requested", notes })
+      .select("id, location")
+      .single();
+    if (error || !appt) {
+      await db.from("leads").delete().eq("id", lead.id);
+      throw new Error("We couldn't save your appointment. Please try again.");
     }
-    const parsed = z.object({ appointmentId: z.string().uuid(), location: z.string(), service: z.string() }).safeParse(result);
-    if (!parsed.success) throw new Error("We couldn't submit your appointment request. Please try again.");
-    return parsed.data;
+    const { error: activitiesError } = await db.from("lead_activities").insert({ lead_id: lead.id, customer_id: customerId, type: "inquiry", title: "Online appointment request submitted", detail: `${cart.label} requested for ${data.date} at ${data.time}` });
+    if (activitiesError) throw new Error("We couldn't record booking activity.");
+    const { error: notificationError } = await db.from("notifications").insert({ title: "New appointment request", body: `${data.contact.firstName} ${data.contact.lastName} requested ${cart.label} for ${data.date} at ${data.time}.` });
+    if (notificationError) throw new Error("Could not notify the business about the booking.");
+    return { appointmentId: appt.id, location: appt.location, service: cart.label, price: cart.price, durationHours: cart.durationHours };
   });
 
 // ---------------- AI assistant ----------------

@@ -1,0 +1,1 @@
+import{s as e}from"./button-Bl403Lm_.js";var t=e(`arrow-right`,[[`path`,{d:`M5 12h14`,key:`1ays0h`}],[`path`,{d:`m12 5 7 7-7 7`,key:`xquz4c`}]]);export{t};
