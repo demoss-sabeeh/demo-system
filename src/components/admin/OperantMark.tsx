@@ -25,7 +25,7 @@ export function OperantMark({
       src={src.url}
       alt="OperantScale"
       draggable={false}
-      className={cn("w-auto shrink-0 select-none", compact ? "h-6" : "h-5", className)}
+      className={cn("w-auto max-w-full shrink-0 select-none object-contain", compact ? "h-6" : "h-5", className)}
     />
   );
 }

@@ -59,7 +59,7 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-navy p-12 text-navy-foreground lg:flex">
-        <OperantMark />
+        <OperantMark className="self-start" />
         <div>
           <p className="eyebrow text-sky">Detailing Business Operating System</p>
           <p className="mt-4 max-w-md font-display text-5xl leading-tight">One connected system for capturing, managing, converting, and retaining detailing customers.</p>
