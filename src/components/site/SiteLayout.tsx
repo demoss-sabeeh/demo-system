@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { BUSINESS, SERVICES } from "@/lib/knowledge";
 import { BRAND } from "@/lib/brand";
 import { AssistantWidget } from "./AssistantWidget";
+import { DetailingMark } from "@/components/admin/DetailingMark";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -16,19 +17,8 @@ const NAV = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
-export function ApexMark({ className = "" }: { className?: string }) {
-  return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden>
-        <path d="M16 3 29 28H3L16 3Z" fill="none" stroke="currentColor" strokeWidth="2.2" />
-        <path d="M10 22h12" stroke="var(--color-primary)" strokeWidth="2.2" />
-      </svg>
-      <span className="leading-none">
-        <span className="block text-[15px] font-extrabold tracking-[0.18em]">APEX</span>
-        <span className="block text-[9px] font-semibold tracking-[0.32em] text-muted-foreground">AUTO DETAILING</span>
-      </span>
-    </span>
-  );
+export function SiteMark({ className = "", dark = true }: { className?: string; dark?: boolean }) {
+  return <DetailingMark dark={dark} className={className} />;
 }
 
 export function SiteLayout({ children }: { children: ReactNode }) {
@@ -43,7 +33,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       </div>
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="container-site flex h-16 items-center justify-between gap-6">
-          <Link to="/" className="text-navy" aria-label="Apex Auto Detailing home"><ApexMark /></Link>
+          <Link to="/" className="text-navy" aria-label="DetailingOS home"><SiteMark /></Link>
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Main">
             {NAV.map((n) => (
               <Link key={n.to} to={n.to} activeOptions={{ exact: n.to === "/" }} className="text-[13px] font-semibold text-slate transition-colors hover:text-navy" activeProps={{ className: "text-navy" }}>
@@ -78,7 +68,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <footer className="bg-navy text-navy-foreground">
         <div className="container-site grid gap-10 py-14 md:grid-cols-4">
           <div className="md:col-span-2">
-            <ApexMark />
+            <SiteMark dark={false} />
             <p className="mt-4 max-w-sm text-sm text-navy-muted">Premium detailing, paint correction, ceramic coating and paint protection film in {BUSINESS.city}.</p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Button asChild variant="cta" size="sm"><Link to="/quote">Get a quote</Link></Button>

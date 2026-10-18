@@ -33,7 +33,7 @@ function Settings() {
   const autos = useAutomations();
   return (
     <div className="space-y-5">
-      <PageTitle title="Settings" subtitle="Workspace configuration for Apex Auto Detailing." />
+      <PageTitle title="Settings" subtitle="Workspace configuration for DetailingOS." />
       <Tabs defaultValue="profile">
         <TabsList className="h-auto flex-wrap justify-start bg-secondary">
           {["profile", "hours", "services", "booking", "notifications", "ai", "automations", "integrations", "users"].map((t) => <TabsTrigger key={t} value={t} className="capitalize">{t === "ai" ? "AI Assistant" : t === "profile" ? "Business profile" : t === "hours" ? "Business hours" : t}</TabsTrigger>)}

@@ -16,9 +16,9 @@ export const Route = createFileRoute("/quote")({
   validateSearch: (s: Record<string, unknown>): { service?: string } => (typeof s.service === "string" ? { service: s.service } : {}),
   head: () => ({
     meta: [
-      { title: "Request a Detailing Quote — Apex Auto Detailing Dallas" },
-      { name: "description", content: "Tell us about your vehicle and get a ceramic coating, paint correction or PPF quote from Apex in Dallas." },
-      { property: "og:title", content: "Request a Quote — Apex Auto Detailing" },
+      { title: "Request a Detailing Quote — DetailingOS Dallas" },
+      { name: "description", content: "Tell us about your vehicle and get a ceramic coating, paint correction or PPF quote from DetailingOS in Dallas." },
+      { property: "og:title", content: "Request a Quote — DetailingOS" },
       { property: "og:description", content: "Get a detailing recommendation for your vehicle." },
     ],
   }),

@@ -53,7 +53,7 @@ export async function updateQuote(id: string, patch: { status?: string; discount
 
 async function quoteSentEffects(quote: { number: string; customer_id: string; lead_id: string | null; vehicle_id?: string | null }) {
   await logActivity({ lead_id: quote.lead_id, customer_id: quote.customer_id, type: "quote", title: "Quote sent", detail: quote.number });
-  await must(supabase.from("messages").insert({ customer_id: quote.customer_id, lead_id: quote.lead_id, channel: "email", direction: "outbound", automated: true, body: `Your quote ${quote.number} from Apex Auto Detailing is ready to review.` }));
+  await must(supabase.from("messages").insert({ customer_id: quote.customer_id, lead_id: quote.lead_id, channel: "email", direction: "outbound", automated: true, body: `Your quote ${quote.number} from DetailingOS is ready to review.` }));
   await must(supabase.from("follow_ups").insert({ customer_id: quote.customer_id, lead_id: quote.lead_id, vehicle_id: quote.vehicle_id ?? null, type: "quote", reason: `Follow up on ${quote.number} if not accepted`, last_contact_at: new Date().toISOString(), next_contact_at: new Date(Date.now() + 48 * 3600000).toISOString(), status: "scheduled" }));
 }
 

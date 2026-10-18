@@ -6,9 +6,9 @@ import { FAQ } from "@/lib/knowledge";
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
-      { title: "FAQ — Ceramic Coating, Paint Correction & PPF | Apex" },
-      { name: "description", content: "Answers about ceramic coating longevity, paint correction, preparation and booking at Apex Auto Detailing." },
-      { property: "og:title", content: "FAQ — Apex Auto Detailing" },
+      { title: "FAQ — Ceramic Coating, Paint Correction & PPF | DetailingOS" },
+      { name: "description", content: "Answers about ceramic coating longevity, paint correction, preparation and booking at DetailingOS." },
+      { property: "og:title", content: "FAQ — DetailingOS" },
       { property: "og:description", content: "Common questions about our detailing services." },
     ],
     scripts: [{ type: "application/ld+json", children: JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }) }],

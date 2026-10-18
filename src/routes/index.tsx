@@ -10,9 +10,9 @@ import { money } from "@/lib/format";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Apex Auto Detailing — Premium Car Detailing in Dallas, TX" },
-      { name: "description", content: "Ceramic coating, paint correction, PPF and full detailing in Dallas. Request a quote or book online with Apex Auto Detailing." },
-      { property: "og:title", content: "Apex Auto Detailing — Premium Auto Detailing, Done Right." },
+      { title: "DetailingOS — Premium Car Detailing in Dallas, TX" },
+      { name: "description", content: "Ceramic coating, paint correction, PPF and full detailing in Dallas. Request a quote or book online with DetailingOS." },
+      { property: "og:title", content: "DetailingOS — Premium Auto Detailing, Done Right." },
       { property: "og:description", content: "Ceramic coating, paint correction, PPF and full detailing in Dallas, Texas." },
     ],
     scripts: [
@@ -53,7 +53,7 @@ function Home() {
           </div>
           <div className="relative lg:col-span-7">
             <div className="animate-reveal overflow-hidden rounded-md">
-              <img src={HERO_IMAGE} alt="Black BMW M4 with fresh ceramic coating in the Apex studio" width={1920} height={1088} className="aspect-[16/10] w-full object-cover" />
+              <img src={HERO_IMAGE} alt="Black BMW M4 with fresh ceramic coating in the DetailingOS studio" width={1920} height={1088} className="aspect-[16/10] w-full object-cover" />
             </div>
             <div className="absolute -left-3 top-8 hidden animate-drift rounded-md border bg-surface px-4 py-3 shadow-sm md:block">
               <p className="eyebrow text-slate">Ceramic Coating</p>

@@ -6,9 +6,9 @@ import { BUSINESS } from "@/lib/knowledge";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact Apex Auto Detailing — Dallas, TX" },
+      { title: "Contact DetailingOS — Dallas, TX" },
       { name: "description", content: "Visit our Dallas studio at 2211 Commerce St, call (214) 555-0199, or request a quote online." },
-      { property: "og:title", content: "Contact — Apex Auto Detailing" },
+      { property: "og:title", content: "Contact — DetailingOS" },
       { property: "og:description", content: "Studio address, hours and ways to reach us." },
     ],
   }),

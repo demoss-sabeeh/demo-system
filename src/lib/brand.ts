@@ -16,7 +16,7 @@ export const BRAND = {
   demoMode: true,
   /** The fictional business whose sample data fills the demo. */
   demoBusiness: {
-    name: "Apex Auto Detailing",
-    disclaimer: "Apex Auto Detailing is a fictional business used for product demonstration.",
+    name: "DetailingOS",
+    disclaimer: "DetailingOS sample data is fictional and used for product demonstration.",
   },
 } as const;
