@@ -4,6 +4,7 @@ import { Menu, Phone, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { BUSINESS, SERVICES } from "@/lib/knowledge";
+import { BRAND } from "@/lib/brand";
 import { AssistantWidget } from "./AssistantWidget";
 
 const NAV = [
@@ -103,8 +104,8 @@ export function SiteLayout({ children }: { children: ReactNode }) {
         </div>
         <div className="border-t border-sidebar-border">
           <div className="container-site flex flex-col gap-2 py-5 text-[11px] text-navy-muted sm:flex-row sm:justify-between">
-            <span>Apex Auto Detailing is a fictional business used for product demonstration.</span>
-            <span>Powered by <span className="font-bold tracking-[0.14em] text-navy-foreground">OPERANTSCALE</span></span>
+            <span>{BRAND.demoBusiness.disclaimer}</span>
+            <span>{BRAND.footerAttribution}</span>
           </div>
         </div>
       </footer>
