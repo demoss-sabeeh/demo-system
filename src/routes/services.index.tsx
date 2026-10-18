@@ -7,9 +7,9 @@ import { money } from "@/lib/format";
 export const Route = createFileRoute("/services/")({
   head: () => ({
     meta: [
-      { title: "Detailing Services & Pricing — Apex Auto Detailing Dallas" },
+      { title: "Detailing Services & Pricing — DetailingOS Dallas" },
       { name: "description", content: "Full detail, ceramic coating, paint correction, PPF, interior and fleet detailing in Dallas, with starting prices." },
-      { property: "og:title", content: "Detailing Services — Apex Auto Detailing" },
+      { property: "og:title", content: "Detailing Services — DetailingOS" },
       { property: "og:description", content: "Ceramic coating, paint correction, PPF and more in Dallas, TX." },
     ],
   }),

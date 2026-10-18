@@ -55,7 +55,7 @@ export async function runDemoStep(key: string, ctx: Ctx): Promise<Ctx> {
       return c;
     }
     case "contacted": {
-      await ins("messages", { customer_id: ctx.customerId, lead_id: ctx.leadId, channel: "sms", direction: "outbound", automated: true, body: "Hi John, thanks for reaching out to Apex Auto Detailing! We received your Ceramic Coating request for your 2024 BMW M4. Is the paint new, or are there any swirls or chips we should know about?" });
+      await ins("messages", { customer_id: ctx.customerId, lead_id: ctx.leadId, channel: "sms", direction: "outbound", automated: true, body: "Hi John, thanks for reaching out to DetailingOS! We received your Ceramic Coating request for your 2024 BMW M4. Is the paint new, or are there any swirls or chips we should know about?" });
       await act(ctx, "auto_response", "Automatic response sent", "Instant Lead Response sent an SMS");
       await supabase.from("leads").update({ status: "contacted" }).eq("id", ctx.leadId!);
       await auto("instant_lead_response", ctx, "SMS response sent to John");
@@ -77,7 +77,7 @@ export async function runDemoStep(key: string, ctx: Ctx): Promise<Ctx> {
       ]);
       await supabase.from("leads").update({ status: "quoted" }).eq("id", ctx.leadId!);
       await act(ctx, "quote", "Quote created", "$1,200 ceramic coating quote sent");
-      await ins("messages", { customer_id: ctx.customerId, lead_id: ctx.leadId, channel: "email", direction: "outbound", automated: true, body: "Your Apex quote is ready: Ceramic Coating for your 2024 BMW M4 — $1,200. Friday 10:00 AM is available." });
+      await ins("messages", { customer_id: ctx.customerId, lead_id: ctx.leadId, channel: "email", direction: "outbound", automated: true, body: "Your DetailingOS quote is ready: Ceramic Coating for your 2024 BMW M4 — $1,200. Friday 10:00 AM is available." });
       return { ...ctx, quoteId };
     }
     case "booked": {

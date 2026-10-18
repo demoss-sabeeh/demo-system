@@ -15,13 +15,13 @@ export const Route = createFileRoute("/services/$slug")({
     return { service: s };
   },
   head: ({ loaderData }) => {
-    if (!loaderData) return { meta: [{ title: "Service not found — Apex Auto Detailing" }, { name: "robots", content: "noindex" }] };
+    if (!loaderData) return { meta: [{ title: "Service not found — DetailingOS" }, { name: "robots", content: "noindex" }] };
     const s = loaderData.service;
     return {
       meta: [
-        { title: `${s.name} in Dallas — Apex Auto Detailing` },
+        { title: `${s.name} in Dallas — DetailingOS` },
         { name: "description", content: `${s.short} Starting at ${money(s.priceFrom)}.` },
-        { property: "og:title", content: `${s.name} — Apex Auto Detailing` },
+        { property: "og:title", content: `${s.name} — DetailingOS` },
         { property: "og:description", content: s.short },
       ],
     };

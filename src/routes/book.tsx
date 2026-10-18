@@ -19,9 +19,9 @@ export const Route = createFileRoute("/book")({
   validateSearch: (s: Record<string, unknown>): { service?: string } => (typeof s.service === "string" ? { service: s.service } : {}),
   head: () => ({
     meta: [
-      { title: "Book a Detailing Appointment Online — Apex Auto Detailing" },
-      { name: "description", content: "Choose a service and an available time at the Apex detailing studio in Dallas. Instant confirmation." },
-      { property: "og:title", content: "Book an Appointment — Apex Auto Detailing" },
+      { title: "Book a Detailing Appointment Online — DetailingOS" },
+      { name: "description", content: "Choose a service and an available time at the DetailingOS detailing studio in Dallas. Instant confirmation." },
+      { property: "og:title", content: "Book an Appointment — DetailingOS" },
       { property: "og:description", content: "Pick an available time online." },
     ],
   }),
@@ -111,7 +111,7 @@ function BookPage() {
     ["Starting price", money(cart.price)],
     ["Date", dateLabel],
     ["Time", f.time],
-    ["Location", done?.location ?? `Apex Studio — ${BUSINESS.address}`],
+    ["Location", done?.location ?? `DetailingOS Studio — ${BUSINESS.address}`],
   ];
 
   return (

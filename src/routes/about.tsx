@@ -6,9 +6,9 @@ import { GALLERY } from "@/lib/gallery";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Apex Auto Detailing — Dallas Detailing Studio" },
+      { title: "About DetailingOS — Dallas Detailing Studio" },
       { name: "description", content: "A climate-controlled Dallas studio focused on paint correction, ceramic coating and paint protection film." },
-      { property: "og:title", content: "About — Apex Auto Detailing" },
+      { property: "og:title", content: "About — DetailingOS" },
       { property: "og:description", content: "Our approach to premium detailing in Dallas." },
     ],
   }),
@@ -19,7 +19,7 @@ function About() {
   return (
     <SiteLayout>
       <PageHeader eyebrow="About" title="A studio built around the finish.">
-        Apex is a Dallas detailing studio focused on paint correction, ceramic coating and paint protection film — with the same process on every vehicle.
+        DetailingOS is a Dallas detailing studio focused on paint correction, ceramic coating and paint protection film — with the same process on every vehicle.
       </PageHeader>
       <section className="container-site grid gap-12 py-16 lg:grid-cols-2">
         <img src={GALLERY[2].src} alt="Machine polishing an Audi RS5 hood" loading="lazy" width={1200} height={912} className="aspect-[4/3] w-full rounded-md object-cover" />

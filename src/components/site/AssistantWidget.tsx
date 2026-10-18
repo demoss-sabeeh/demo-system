@@ -14,7 +14,7 @@ const SUGGESTIONS = ["I have a 2024 BMW M4. How much is ceramic coating?", "Can 
 export function AssistantWidget() {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([
-    { role: "assistant", content: "Hi — I'm the Apex assistant. Ask me about services, pricing, timing or availability." },
+    { role: "assistant", content: "Hi — I'm the DetailingOS assistant. Ask me about services, pricing, timing or availability." },
   ]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -76,13 +76,13 @@ export function AssistantWidget() {
             exit={{ opacity: 0, y: 12 }}
             transition={{ duration: 0.2 }}
             role="dialog"
-            aria-label="Apex assistant"
+            aria-label="DetailingOS assistant"
             className="fixed inset-x-3 bottom-[var(--assistant-bottom,80px)] z-50 flex max-h-[min(70dvh,var(--assistant-height,70dvh))] flex-col overflow-hidden rounded-lg border bg-surface shadow-[0_20px_60px_-20px_color-mix(in_oklch,var(--navy)_40%,transparent)] sm:inset-x-auto sm:right-6 sm:w-[380px]"
           >
             <div className="flex items-center justify-between bg-navy px-4 py-3 text-navy-foreground">
               <div className="min-w-0">
-                <p className="text-sm font-bold">Apex Assistant</p>
-                <p className="text-[11px] text-navy-muted">Answers from Apex's service guide{mode === "demo" ? " · demo mode" : ""}</p>
+                <p className="text-sm font-bold">DetailingOS Assistant</p>
+                <p className="text-[11px] text-navy-muted">Answers from DetailingOS's service guide{mode === "demo" ? " · demo mode" : ""}</p>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close assistant" className="h-11 w-11 shrink-0 hover:bg-sidebar-accent hover:text-navy-foreground"><X className="h-4 w-4" /></Button>
             </div>
@@ -136,12 +136,12 @@ export function AssistantWidget() {
       <Button
         variant="navy"
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close assistant" : "Chat with Apex"}
+        aria-label={open ? "Close assistant" : "Chat with DetailingOS"}
         aria-expanded={open}
         className="fixed bottom-5 right-5 z-50 flex h-12 items-center gap-2 rounded-md bg-navy px-5 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 text-sm font-semibold text-navy-foreground shadow-lg transition-transform hover:-translate-y-0.5 sm:right-6"
       >
         {open ? <X className="h-4 w-4" /> : <MessageSquareText className="h-4 w-4" />}
-        <span className="hidden sm:inline">{open ? "Close" : "Ask Apex"}</span>
+        <span className="hidden sm:inline">{open ? "Close" : "Ask DetailingOS"}</span>
       </Button>
     </>
   );

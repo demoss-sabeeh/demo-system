@@ -2,11 +2,11 @@
 // The assistant may only answer from this data.
 
 export const BUSINESS = {
-  name: "Apex Auto Detailing",
+  name: "DetailingOS",
   city: "Dallas, Texas",
   address: "2211 Commerce St, Dallas, TX 75201",
   phone: "(214) 555-0199",
-  email: "studio@apexdetailing.example",
+  email: "studio@detailingos.example",
   hours: [
     { day: "Monday – Friday", time: "8:00 AM – 6:00 PM" },
     { day: "Saturday", time: "9:00 AM – 4:00 PM" },
