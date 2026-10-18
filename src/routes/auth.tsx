@@ -66,7 +66,7 @@ function AuthPage() {
           <p className="mt-4 max-w-md font-display text-5xl leading-tight">One connected system for capturing, managing, converting, and retaining detailing customers.</p>
           <p className="mt-6 text-sm tracking-[0.2em] text-navy-muted">CAPTURE → MANAGE → CONVERT → RETAIN</p>
         </div>
-        <p className="text-xs text-navy-muted">Demo environment · {BRAND.demoBusiness.name} (fictional) · {BRAND.footerAttribution}</p>
+        <p className="text-xs text-navy-muted">Demo environment · {BRAND.footerAttribution}</p>
       </div>
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
