@@ -8,14 +8,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { OperantMark } from "@/components/admin/OperantMark";
+import { DetailingMark } from "@/components/admin/DetailingMark";
+import { BRAND } from "@/lib/brand";
 import { RunDemoButton } from "@/components/admin/RunDemo";
 import { resetDemo } from "@/lib/actions";
 import { useInvalidate } from "@/lib/admin-data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "OperantScale — Apex Auto Detailing" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: `${BRAND.productName} — Business Dashboard` }, { name: "robots", content: "noindex" }] }),
   component: AdminLayout,
 });
 
@@ -92,12 +93,12 @@ function AdminLayout() {
     <div className="flex min-h-screen bg-background">
       <aside className={cn("sticky top-0 hidden h-dvh shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 lg:flex", collapsed ? "w-16" : "w-60")}>
         <button onClick={() => setCollapsed((c) => !c)} className={cn("flex h-14 items-center border-b border-sidebar-border px-4 text-navy-foreground", collapsed && "justify-center px-0")} aria-label="Toggle sidebar">
-          <OperantMark compact={collapsed} />
+          <DetailingMark compact={collapsed} />
         </button>
         {!collapsed && (
           <div className="mx-3 mt-3 rounded-md border border-sidebar-border px-3 py-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky">Workspace</p>
-            <p className="text-sm font-bold text-navy-foreground">Apex Auto Detailing</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky">Demo workspace</p>
+            <p className="text-sm font-bold text-navy-foreground">{BRAND.demoBusiness.name}</p>
           </div>
         )}
         <SideNav collapsed={collapsed} />
@@ -106,7 +107,7 @@ function AdminLayout() {
 
       <Sheet open={mobile} onOpenChange={setMobile}>
         <SheetContent side="left" className="flex w-72 flex-col border-sidebar-border bg-sidebar p-0 text-sidebar-foreground">
-          <SheetTitle className="flex h-14 items-center border-b border-sidebar-border px-4 text-navy-foreground"><OperantMark /></SheetTitle>
+          <SheetTitle className="flex h-14 items-center border-b border-sidebar-border px-4 text-navy-foreground"><DetailingMark /></SheetTitle>
           <SideNav onNavigate={() => setMobile(false)} />
           {footer()}
         </SheetContent>
@@ -116,10 +117,12 @@ function AdminLayout() {
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b bg-surface/95 px-4 backdrop-blur md:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <Button variant="ghost" size="icon" className="h-11 w-11 lg:hidden" onClick={() => setMobile(true)} aria-label="Open navigation"><Menu /></Button>
-            <span className="inline-flex items-center gap-2 rounded border border-warning/30 bg-warning-soft px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-warning">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warning" /> Demo mode
-            </span>
-            <span className="hidden truncate text-sm font-bold text-navy sm:inline">Apex Auto Detailing</span>
+            {BRAND.demoMode && (
+              <span className="inline-flex items-center gap-2 rounded border border-warning/30 bg-warning-soft px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-warning">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warning" /> Demo mode
+              </span>
+            )}
+            <span className="hidden truncate text-sm font-bold text-navy sm:inline">{BRAND.demoBusiness.name}</span>
           </div>
           <div className="flex items-center gap-2">
             <AlertDialog>
