@@ -13,3 +13,4 @@
 - Default the calendar to day view on phones while retaining explicit week/month selection; daily appointments remain readable without horizontal scrolling.
 - Size the floating assistant against the visual viewport; its composer must remain accessible when a phone keyboard is open.
 - Deletes go through src/lib/actions.ts (delete_* SQL functions for leads, vehicles, customers, services) and the shared ConfirmDelete/RowDelete/DeleteButton components; keeps dependent-record handling consistent and atomic.
+- Branding is centralized in src/lib/brand.ts (product name, agency, footer attribution, demo flag, fictional demo business); the product mark is the SVG in src/components/admin/DetailingMark.tsx. Apex Auto Detailing is intentional sample business data, not platform branding — do not rename it in knowledge.ts, demo seeds or message copy.
