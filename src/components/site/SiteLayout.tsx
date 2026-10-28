@@ -6,7 +6,6 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { BUSINESS, SERVICES } from "@/lib/knowledge";
 import { BRAND } from "@/lib/brand";
 import { AssistantWidget } from "./AssistantWidget";
-import { DetailingMark } from "@/components/admin/DetailingMark";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -17,9 +16,6 @@ const NAV = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
-export function SiteMark({ className = "", dark = true }: { className?: string; dark?: boolean }) {
-  return <DetailingMark dark={dark} className={className} />;
-}
 
 export function SiteLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
