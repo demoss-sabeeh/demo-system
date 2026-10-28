@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  LayoutGrid, Users, Columns3, Contact, Car, FileText, CalendarClock, CalendarDays, MessagesSquare, BellRing, Workflow, Wrench, BarChart3, Settings, Menu, LogOut, RotateCcw, ExternalLink, Loader2,
+  LayoutGrid, Users, Columns3, Contact, Car, FileText, CalendarClock, CalendarDays, MessagesSquare, BellRing, Workflow, Wrench, BarChart3, Settings, Menu, LogOut, RotateCcw, ExternalLink, Loader2, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,10 +42,10 @@ function SideNav({ onNavigate, collapsed = false }: { onNavigate?: () => void; c
                   onClick={onNavigate}
                   activeOptions={{ exact: "exact" in it && it.exact }}
                   title={collapsed ? it.label : undefined}
-                  className={cn("flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "justify-center")}
-                  activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground [&_svg]:text-sidebar-primary" }}
+                  className={cn("relative flex h-9 items-center gap-3 rounded-md px-2.5 text-[13px] font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground", collapsed && "justify-center px-0")}
+                  activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground [&_svg]:text-sidebar-primary before:absolute before:-left-3 before:top-2 before:bottom-2 before:w-0.5 before:rounded-r before:bg-sidebar-primary" }}
                 >
-                  <it.icon className="h-4 w-4 shrink-0" /> {!collapsed && it.label}
+                  <it.icon className="h-4 w-4 shrink-0" strokeWidth={1.9} /> {!collapsed && <span className="truncate">{it.label}</span>}
                 </Link>
               </li>
             ))}
@@ -63,6 +63,11 @@ function AdminLayout() {
   const [resetting, setResetting] = useState(false);
   const invalidate = useInvalidate();
   const nav = useNavigate();
+  const pageLabel = (() => {
+    const items = NAV.flatMap((g) => g.items as readonly { to: string; label: string }[]);
+    const hit = [...items].sort((a, b) => b.to.length - a.to.length).find((i) => pathname === i.to || pathname.startsWith(i.to + "/"));
+    return hit?.label ?? "Overview";
+  })();
 
   async function doReset() {
     setResetting(true);
@@ -92,9 +97,15 @@ function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-background">
       <aside className={cn("sticky top-0 hidden h-dvh shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 lg:flex", collapsed ? "w-16" : "w-60")}>
-        <button onClick={() => setCollapsed((c) => !c)} className={cn("flex h-14 items-center border-b border-sidebar-border px-4 text-navy-foreground", collapsed && "justify-center px-0")} aria-label="Toggle sidebar">
-          <DetailingMark compact={collapsed} />
-        </button>
+        <div className={cn("flex h-16 items-center justify-between gap-2 border-b border-sidebar-border px-4", collapsed && "justify-center px-0")}>
+          <Link to="/admin" aria-label={`${BRAND.productName} overview`} className="min-w-0"><DetailingMark compact={collapsed} className={collapsed ? "h-7" : "h-8"} /></Link>
+          {!collapsed && (
+            <button onClick={() => setCollapsed(true)} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-navy-muted transition-colors hover:bg-sidebar-accent hover:text-navy-foreground" aria-label="Collapse sidebar"><PanelLeftClose className="h-4 w-4" /></button>
+          )}
+        </div>
+        {collapsed && (
+          <button onClick={() => setCollapsed(false)} className="mx-auto mt-3 grid h-8 w-8 place-items-center rounded-md text-navy-muted transition-colors hover:bg-sidebar-accent hover:text-navy-foreground" aria-label="Expand sidebar"><PanelLeftOpen className="h-4 w-4" /></button>
+        )}
         {!collapsed && (
           <div className="mx-3 mt-3 rounded-md border border-sidebar-border px-3 py-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky">Demo workspace</p>
@@ -107,14 +118,14 @@ function AdminLayout() {
 
       <Sheet open={mobile} onOpenChange={setMobile}>
         <SheetContent side="left" className="flex w-72 flex-col border-sidebar-border bg-sidebar p-0 text-sidebar-foreground">
-          <SheetTitle className="flex h-14 items-center border-b border-sidebar-border px-4 text-navy-foreground"><DetailingMark /></SheetTitle>
+          <SheetTitle className="flex h-16 items-center border-b border-sidebar-border px-4 text-navy-foreground"><DetailingMark /></SheetTitle>
           <SideNav onNavigate={() => setMobile(false)} />
           {footer()}
         </SheetContent>
       </Sheet>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b bg-surface/95 px-4 backdrop-blur md:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b bg-surface/95 px-4 backdrop-blur md:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <Button variant="ghost" size="icon" className="h-11 w-11 lg:hidden" onClick={() => setMobile(true)} aria-label="Open navigation"><Menu /></Button>
             {BRAND.demoMode && (
@@ -122,7 +133,11 @@ function AdminLayout() {
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warning" /> Demo mode
               </span>
             )}
-            <span className="hidden truncate text-sm font-bold text-navy sm:inline">{BRAND.demoBusiness.name}</span>
+            <div className="hidden min-w-0 items-center gap-2 text-sm sm:flex">
+              <span className="truncate font-semibold text-slate">{BRAND.demoBusiness.name}</span>
+              <span className="text-mist">/</span>
+              <span className="truncate font-bold text-navy">{pageLabel}</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <AlertDialog>

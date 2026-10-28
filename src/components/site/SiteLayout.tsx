@@ -66,29 +66,38 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       </header>
       <main className="flex-1">{children}</main>
       <footer className="bg-navy text-navy-foreground">
-        <div className="container-site grid gap-10 py-14 md:grid-cols-4">
-          <div className="md:col-span-2">
+        <div className="container-site grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-12">
+          <div className="sm:col-span-2 lg:col-span-4">
             <SiteMark dark={false} />
-            <p className="mt-4 max-w-sm text-sm text-navy-muted">Premium detailing, paint correction, ceramic coating and paint protection film in {BUSINESS.city}.</p>
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-navy-muted">Hand detailing, paint correction, ceramic coating and paint protection film in {BUSINESS.city}.</p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Button asChild variant="cta" size="sm"><Link to="/quote">Get a quote</Link></Button>
-              <Link to="/admin" className="inline-flex h-8 items-center rounded-md border border-navy-muted/30 px-3 text-xs font-semibold text-navy-muted hover:text-navy-foreground">Business login</Link>
+              <Link to="/admin" className="inline-flex h-8 items-center rounded-md border border-navy-muted/30 px-3 text-xs font-semibold text-navy-muted transition-colors hover:text-navy-foreground">Business login</Link>
             </div>
           </div>
-          <div>
-            <p className="eyebrow text-navy-muted">Services</p>
+          <div className="lg:col-span-2">
+            <p className="eyebrow text-navy-muted">Explore</p>
             <ul className="mt-4 space-y-2 text-sm">
-              {SERVICES.map((s) => (
-                <li key={s.slug}><Link to="/services/$slug" params={{ slug: s.slug }} className="text-navy-foreground/85 hover:text-navy-foreground">{s.name}</Link></li>
+              {[...NAV.slice(1), { to: "/book", label: "Book appointment" } as const].map((n) => (
+                <li key={n.to}><Link to={n.to} className="text-navy-foreground/85 transition-colors hover:text-navy-foreground">{n.label}</Link></li>
               ))}
             </ul>
           </div>
-          <div>
+          <div className="lg:col-span-3">
+            <p className="eyebrow text-navy-muted">Services</p>
+            <ul className="mt-4 space-y-2 text-sm">
+              {SERVICES.map((s) => (
+                <li key={s.slug}><Link to="/services/$slug" params={{ slug: s.slug }} className="text-navy-foreground/85 transition-colors hover:text-navy-foreground">{s.name}</Link></li>
+              ))}
+            </ul>
+          </div>
+          <div className="lg:col-span-3">
             <p className="eyebrow text-navy-muted">Visit</p>
             <address className="mt-4 space-y-1 text-sm not-italic text-navy-foreground/85">
               <p>{BUSINESS.address}</p>
-              <p>{BUSINESS.phone}</p>
-              {BUSINESS.hours.map((h) => <p key={h.day} className="text-navy-muted">{h.day}: {h.time}</p>)}
+              <p><a href={`tel:${BUSINESS.phone}`} className="hover:text-navy-foreground">{BUSINESS.phone}</a></p>
+              <p className="break-all"><a href={`mailto:${BUSINESS.email}`} className="hover:text-navy-foreground">{BUSINESS.email}</a></p>
+              <div className="pt-3">{BUSINESS.hours.map((h) => <p key={h.day} className="text-navy-muted">{h.day}: {h.time}</p>)}</div>
             </address>
           </div>
         </div>
