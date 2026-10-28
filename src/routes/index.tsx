@@ -60,7 +60,7 @@ const REVIEWS = [
 
 function Home() {
   const [lightbox, setLightbox] = useState<number | null>(null);
-  const shots = GALLERY.slice(0, 6);
+  const shots = GALLERY.slice(0, 5);
   return (
     <SiteLayout>
       {/* Hero */}
