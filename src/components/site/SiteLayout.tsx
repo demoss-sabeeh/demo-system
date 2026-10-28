@@ -6,7 +6,6 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { BUSINESS, SERVICES } from "@/lib/knowledge";
 import { BRAND } from "@/lib/brand";
 import { AssistantWidget } from "./AssistantWidget";
-import { DetailingMark } from "@/components/admin/DetailingMark";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -17,9 +16,6 @@ const NAV = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
-export function SiteMark({ className = "", dark = true }: { className?: string; dark?: boolean }) {
-  return <DetailingMark dark={dark} className={className} />;
-}
 
 export function SiteLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -33,7 +29,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       </div>
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="container-site flex h-16 items-center justify-between gap-6">
-          <Link to="/" className="text-navy" aria-label="DetailingOS home"><SiteMark /></Link>
+          <Link to="/" className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl" aria-label="DetailingOS home">DetailingOS</Link>
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Main">
             {NAV.map((n) => (
               <Link key={n.to} to={n.to} activeOptions={{ exact: n.to === "/" }} className="text-[13px] font-semibold text-slate transition-colors hover:text-navy" activeProps={{ className: "text-navy" }}>
@@ -68,8 +64,8 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <footer className="bg-navy text-navy-foreground">
         <div className="container-site grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-12">
           <div className="sm:col-span-2 lg:col-span-4">
-            <SiteMark dark={false} />
-            <p className="mt-5 max-w-sm text-sm leading-relaxed text-navy-muted">Hand detailing, paint correction, ceramic coating and paint protection film in {BUSINESS.city}.</p>
+            <p className="font-display text-2xl font-semibold tracking-tight">DetailingOS</p>
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-navy-muted">Hand detailing, paint correction, ceramic coating and paint protection film in {BUSINESS.city}.</p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Button asChild variant="cta" size="sm"><Link to="/quote">Get a quote</Link></Button>
               <Link to="/admin" className="inline-flex h-8 items-center rounded-md border border-navy-muted/30 px-3 text-xs font-semibold text-navy-muted transition-colors hover:text-navy-foreground">Business login</Link>
